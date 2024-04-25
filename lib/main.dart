@@ -16,6 +16,7 @@ List<CameraDescription> cameras = [];
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   cameras = await availableCameras();
+  await requestStoragePermission();
   runApp(const ImageSignerCamera());
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky,
       overlays: []);
@@ -83,15 +84,39 @@ class _CameraScreenState extends State<CameraScreen> {
     final DateTime now = DateTime.now();
     final String formatted = DateFormat('yyyy-MM-dd-HH-mm').format(now);
     final String filename = '$formatted.png';
-    final File file = File('$storagePath/$filename');
-    file.writeAsBytesSync(png);
+    final directory = Directory('$storagePath/imageSigner');
+    if (!await directory.exists()) {
+      await directory.create(
+          recursive:
+              true); // recursive set to true to create all directories in the path
+    }
+    final File file = File('${directory.path}/$filename');
+    await file.writeAsBytes(png);
+  }
+
+  void switchCamera() async {
+    if (cameras.length > 1) {
+      if (_controller.description == cameras[0]) {
+        _controller = CameraController(
+          cameras[1],
+          ResolutionPreset.ultraHigh,
+        );
+      } else {
+        _controller = CameraController(
+          cameras[0],
+          ResolutionPreset.ultraHigh,
+        );
+      }
+      await _controller.initialize();
+      setState(() {});
+    }
   }
 
   @override
   void initState() {
     super.initState();
     _controller = CameraController(
-      cameras[0],
+      cameras[1],
       ResolutionPreset.ultraHigh,
     );
     _initializeControllerFuture = _controller.initialize();
@@ -136,18 +161,23 @@ class _CameraScreenState extends State<CameraScreen> {
                       child: const Icon(Icons.camera),
                       onPressed: () async {
                         try {
-                          await requestStoragePermission();
                           await _initializeControllerFuture;
                           final image = await _controller.takePicture();
-                          // Process the captured image here
                           img.Image signedImage = await addHiddenBit(
                               image, BinaryProvider('Hello, World!\n'));
                           await saveImage(signedImage);
                         } catch (e) {
-                          print(e);
+                          //print(e);
                         }
                       },
                     ),
+                    const Padding(
+                        padding: EdgeInsets.all(
+                            20)), // Adjust the padding to add more space
+                    FloatingActionButton(
+                      onPressed: switchCamera,
+                      child: const Icon(Icons.switch_camera),
+                    )
                     // Add more camera controls here
                   ],
                 ),
