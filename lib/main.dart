@@ -11,6 +11,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 List<CameraDescription> cameras = [];
+int cameraIndex = 0;
 
 // main
 Future<void> main() async {
@@ -76,9 +77,41 @@ class CameraScreen extends StatefulWidget {
 class _CameraScreenState extends State<CameraScreen> {
   late CameraController _controller;
   late Future<void> _initializeControllerFuture;
+  File? _latestImage;
+  bool _isLoading = false;
+
+  Future<void> _loadLatestImage() async {
+    String? storagePath = await getPublicDCIMFolderPath();
+    var directory = Directory('$storagePath/imageSigner');
+    var files = directory.listSync();
+    files.sort((a, b) => b
+        .statSync()
+        .changed
+        .toString()
+        .compareTo(a.statSync().changed.toString()));
+    setState(() {
+      _latestImage = files.isEmpty ? null : files.first as File?;
+    });
+  }
+
+  // 사진 촬영
+  Future<void> takeAndSignPicture() async {
+    setState(() {
+      _isLoading = true;
+    });
+    await _initializeControllerFuture;
+    final image = await _controller.takePicture();
+    img.Image signedImage =
+        await addHiddenBit(image, BinaryProvider('Hello, World!\n'));
+    await saveImage(signedImage);
+    setState(() {
+      _latestImage = File(image.path);
+      _isLoading = false;
+    });
+  }
 
   // 이미지 저장
-  Future<void> saveImage(img.Image signedImage) async {
+  Future<File> saveImage(img.Image signedImage) async {
     String? storagePath = await getPublicDCIMFolderPath();
     List<int> png = img.encodePng(signedImage);
     //final Directory directory = Directory('/storage/emulated/0/');
@@ -93,25 +126,49 @@ class _CameraScreenState extends State<CameraScreen> {
     }
     final File file = File('${directory.path}/$filename');
     await file.writeAsBytes(png);
+    return file;
   }
+
+  // // 카메라 전환
+  // void switchCamera() async {
+  //   if (cameras.length > 1) {
+  //     if (_controller.description == cameras[0]) {
+  //       _controller = CameraController(
+  //         cameras[1],
+  //         ResolutionPreset.ultraHigh,
+  //       );
+  //     } else {
+  //       _controller = CameraController(
+  //         cameras[0],
+  //         ResolutionPreset.ultraHigh,
+  //       );
+  //     }
+  //     await _controller.initialize();
+  //     setState(() {});
+  //   }
+  // }
 
   // 카메라 전환
   void switchCamera() async {
-    if (cameras.length > 1) {
-      if (_controller.description == cameras[0]) {
-        _controller = CameraController(
-          cameras[1],
-          ResolutionPreset.ultraHigh,
-        );
-      } else {
-        _controller = CameraController(
-          cameras[0],
-          ResolutionPreset.ultraHigh,
-        );
-      }
-      await _controller.initialize();
-      setState(() {});
+    cameraIndex += 1;
+    if (cameraIndex > cameras.length - 1) {
+      cameraIndex = 0;
     }
+
+    _controller = CameraController(
+      cameras[cameraIndex],
+      ResolutionPreset.ultraHigh,
+    );
+
+    await _controller.initialize();
+    setState(() {});
+
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(
+        cameras[cameraIndex].toString(),
+      ),
+      duration: const Duration(milliseconds: 1000),
+    ));
   }
 
   // 카메라 초기화
@@ -119,12 +176,14 @@ class _CameraScreenState extends State<CameraScreen> {
   void initState() {
     super.initState();
     _controller = CameraController(
-      cameras[1],
+      cameras[cameraIndex],
       ResolutionPreset.ultraHigh,
     );
     _initializeControllerFuture = _controller.initialize();
+    _loadLatestImage();
   }
 
+  // 카메라 해제
   @override
   void dispose() {
     _controller.dispose();
@@ -136,6 +195,7 @@ class _CameraScreenState extends State<CameraScreen> {
     return Scaffold(
       body: Column(
         children: <Widget>[
+          // 1. 카메라 화면
           FutureBuilder<void>(
             future: _initializeControllerFuture,
             builder: (context, snapshot) {
@@ -152,6 +212,8 @@ class _CameraScreenState extends State<CameraScreen> {
               }
             },
           ),
+
+          // 2. 버튼
           Expanded(
             child: Container(
               color: Colors.black,
@@ -160,28 +222,27 @@ class _CameraScreenState extends State<CameraScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
+                    // 1. 갤러리 버튼
                     FloatingActionButton(
-                      child: const Icon(Icons.camera),
-                      onPressed: () async {
-                        try {
-                          await _initializeControllerFuture;
-                          final image = await _controller.takePicture();
-                          img.Image signedImage = await addHiddenBit(
-                              image, BinaryProvider('Hello, World!\n'));
-                          await saveImage(signedImage);
-                        } catch (e) {
-                          //print(e);
-                        }
-                      },
+                      onPressed: null,
+                      child: _isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : _latestImage != null
+                              ? Image.file(_latestImage!)
+                              : const Icon(Icons.browse_gallery_rounded),
                     ),
-                    const Padding(
-                        padding: EdgeInsets.all(
-                            20)), // Adjust the padding to add more space
+                    // 2. 촬영 버튼
+                    const Padding(padding: EdgeInsets.all(20)),
+                    FloatingActionButton(
+                      onPressed: takeAndSignPicture,
+                      child: const Icon(Icons.camera),
+                    ),
+                    // 3. 카메라 전환 버튼
+                    const Padding(padding: EdgeInsets.all(20)),
                     FloatingActionButton(
                       onPressed: switchCamera,
                       child: const Icon(Icons.switch_camera),
                     )
-                    // Add more camera controls here
                   ],
                 ),
               ),
