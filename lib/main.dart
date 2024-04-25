@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
-import 'package:image/image.dart';
 import 'package:image_signer_camera/image_signer_and_validator.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
@@ -13,6 +12,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 List<CameraDescription> cameras = [];
 
+// main
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   cameras = await availableCameras();
@@ -25,6 +25,7 @@ Future<void> main() async {
   ]);
 }
 
+// 저장소 권한 요청
 Future<void> requestStoragePermission() async {
   var status = await Permission.storage.status;
   if (!status.isGranted) {
@@ -32,6 +33,7 @@ Future<void> requestStoragePermission() async {
   }
 }
 
+// DCIM 폴더 경로 가져오기 (Scoped Storage)
 Future<String> getPublicDCIMFolderPath() async {
   String? dcimDirPath;
 
@@ -46,6 +48,7 @@ Future<String> getPublicDCIMFolderPath() async {
   return dcimDirPath;
 }
 
+// 메인 위젯
 class ImageSignerCamera extends StatelessWidget {
   const ImageSignerCamera({super.key});
 
@@ -56,11 +59,13 @@ class ImageSignerCamera extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
+      // 주 화면
       home: const CameraScreen(),
     );
   }
 }
 
+// 카메라 화면 위젯
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
 
@@ -72,14 +77,10 @@ class _CameraScreenState extends State<CameraScreen> {
   late CameraController _controller;
   late Future<void> _initializeControllerFuture;
 
-  // void saveImage(img.Image signedImage) {
-  //   List<int> png = encodePng(signedImage);
-  //   File('/sdcard/output.png').writeAsBytesSync(png);
-  // }
-
+  // 이미지 저장
   Future<void> saveImage(img.Image signedImage) async {
     String? storagePath = await getPublicDCIMFolderPath();
-    List<int> png = encodePng(signedImage);
+    List<int> png = img.encodePng(signedImage);
     //final Directory directory = Directory('/storage/emulated/0/');
     final DateTime now = DateTime.now();
     final String formatted = DateFormat('yyyy-MM-dd-HH-mm').format(now);
@@ -94,6 +95,7 @@ class _CameraScreenState extends State<CameraScreen> {
     await file.writeAsBytes(png);
   }
 
+  // 카메라 전환
   void switchCamera() async {
     if (cameras.length > 1) {
       if (_controller.description == cameras[0]) {
@@ -112,6 +114,7 @@ class _CameraScreenState extends State<CameraScreen> {
     }
   }
 
+  // 카메라 초기화
   @override
   void initState() {
     super.initState();
