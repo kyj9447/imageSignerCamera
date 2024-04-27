@@ -83,6 +83,10 @@ class _CameraScreenState extends State<CameraScreen> {
   Future<void> _loadLatestImage() async {
     String? storagePath = await getPublicDCIMFolderPath();
     var directory = Directory('$storagePath/imageSigner');
+    // 디렉토리가 없으면 생성
+    if (!await directory.exists()) {
+      await directory.create(recursive: true);
+    }
     var files = directory.listSync();
     files.sort((a, b) => b
         .statSync()
