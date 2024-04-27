@@ -72,6 +72,12 @@ class BinaryProvider {
   }
 }
 
+Future<Image> addHiddenBitWrapper(List<dynamic> args) async {
+  XFile image = args[0];
+  BinaryProvider hiddenBinary = args[1];
+  return addHiddenBit(image, hiddenBinary);
+}
+
 Future<Image> addHiddenBit(XFile image, BinaryProvider hiddenBinary) async {
   Image? img = decodeImage(await image.readAsBytes());
 

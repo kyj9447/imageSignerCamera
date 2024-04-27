@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:external_path/external_path.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
@@ -106,7 +107,7 @@ class _CameraScreenState extends State<CameraScreen> {
     await _initializeControllerFuture;
     final image = await _controller.takePicture();
     img.Image signedImage =
-        await addHiddenBit(image, BinaryProvider('Hello, World!\n'));
+        await compute(addHiddenBitWrapper,[image, BinaryProvider('Hello, World!\n')]);
     await saveImage(signedImage);
     setState(() {
       _latestImage = File(image.path);
