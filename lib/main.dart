@@ -80,6 +80,7 @@ class _CameraScreenState extends State<CameraScreen> {
   late Future<void> _initializeControllerFuture;
   File? _latestImage;
   bool _isLoading = false;
+  int _runningTasks = 0;
   RootIsolateToken rootIsolateToken = RootIsolateToken.instance!;
 
   Future<void> _loadLatestImage() async {
@@ -103,42 +104,30 @@ class _CameraScreenState extends State<CameraScreen> {
   // 사진 촬영
   Future<void> takeAndSignPicture() async {
     setState(() {
-      _isLoading = true;
+      _runningTasks++;
     });
     await _initializeControllerFuture;
     final image = await _controller.takePicture();
 
+    processImage(image).then((_) {
+      setState(() {
+        _runningTasks--;
+      });
+    });
+
+    setState(() {
+      _latestImage = File(image.path);
+    });
+  }
+
+  Future<void> processImage(XFile image) async {
     // 이미지에 텍스트 숨기기 (compute 사용)
     img.Image signedImage = await compute(addHiddenBitWrapper,
         [rootIsolateToken, image, BinaryProvider('Hello, World!\n')]);
 
     // 이미지 저장 (compute 사용)
     await compute(saveImageWrapper, [rootIsolateToken, signedImage]);
-
-    setState(() {
-      _latestImage = File(image.path);
-      _isLoading = false;
-    });
   }
-
-  // // 카메라 전환
-  // void switchCamera() async {
-  //   if (cameras.length > 1) {
-  //     if (_controller.description == cameras[0]) {
-  //       _controller = CameraController(
-  //         cameras[1],
-  //         ResolutionPreset.ultraHigh,
-  //       );
-  //     } else {
-  //       _controller = CameraController(
-  //         cameras[0],
-  //         ResolutionPreset.ultraHigh,
-  //       );
-  //     }
-  //     await _controller.initialize();
-  //     setState(() {});
-  //   }
-  // }
 
   // 카메라 전환
   void switchCamera() async {
@@ -217,8 +206,17 @@ class _CameraScreenState extends State<CameraScreen> {
                     // 1. 갤러리 버튼
                     FloatingActionButton(
                       onPressed: null,
-                      child: _isLoading
-                          ? const Center(child: CircularProgressIndicator())
+                      child: _runningTasks > 0
+                          ? Center(
+                              child: Stack(
+                              alignment: Alignment.center,
+                              children: <Widget>[
+                                CircularProgressIndicator(),
+                                _runningTasks > 1
+                                    ? Text('$_runningTasks')
+                                    : Container(),
+                              ],
+                            ))
                           : _latestImage != null
                               ? Image.file(_latestImage!)
                               : const Icon(Icons.browse_gallery_rounded),
