@@ -7,7 +7,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_signer_camera/image_signer_and_validator.dart';
-import 'package:intl/intl.dart';
+import 'package:image_signer_camera/save_image.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -80,6 +80,7 @@ class _CameraScreenState extends State<CameraScreen> {
   late Future<void> _initializeControllerFuture;
   File? _latestImage;
   bool _isLoading = false;
+  RootIsolateToken rootIsolateToken = RootIsolateToken.instance!;
 
   Future<void> _loadLatestImage() async {
     String? storagePath = await getPublicDCIMFolderPath();
@@ -106,32 +107,18 @@ class _CameraScreenState extends State<CameraScreen> {
     });
     await _initializeControllerFuture;
     final image = await _controller.takePicture();
-    img.Image signedImage =
-        await compute(addHiddenBitWrapper,[image, BinaryProvider('Hello, World!\n')]);
-    await saveImage(signedImage);
+
+    // 이미지에 텍스트 숨기기 (compute 사용)
+    img.Image signedImage = await compute(addHiddenBitWrapper,
+        [rootIsolateToken, image, BinaryProvider('Hello, World!\n')]);
+
+    // 이미지 저장 (compute 사용)
+    await compute(saveImageWrapper, [rootIsolateToken, signedImage]);
+
     setState(() {
       _latestImage = File(image.path);
       _isLoading = false;
     });
-  }
-
-  // 이미지 저장
-  Future<File> saveImage(img.Image signedImage) async {
-    String? storagePath = await getPublicDCIMFolderPath();
-    List<int> png = img.encodePng(signedImage);
-    //final Directory directory = Directory('/storage/emulated/0/');
-    final DateTime now = DateTime.now();
-    final String formatted = DateFormat('yyyy-MM-dd-HH-mm').format(now);
-    final String filename = '$formatted.png';
-    final directory = Directory('$storagePath/imageSigner');
-    if (!await directory.exists()) {
-      await directory.create(
-          recursive:
-              true); // recursive set to true to create all directories in the path
-    }
-    final File file = File('${directory.path}/$filename');
-    await file.writeAsBytes(png);
-    return file;
   }
 
   // // 카메라 전환

@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:camera/camera.dart';
+import 'package:flutter/services.dart';
 import 'package:image/image.dart';
 
 class BinaryProvider {
@@ -43,7 +44,10 @@ class BinaryProvider {
   }
 
   String strToBinary(String string) {
-    return string.split('').map((char) => char.codeUnitAt(0).toRadixString(2).padLeft(8, '0')).join();
+    return string
+        .split('')
+        .map((char) => char.codeUnitAt(0).toRadixString(2).padLeft(8, '0'))
+        .join();
   }
 
   int nextBit() {
@@ -72,12 +76,17 @@ class BinaryProvider {
   }
 }
 
+// compute()용 wrapper
 Future<Image> addHiddenBitWrapper(List<dynamic> args) async {
-  XFile image = args[0];
-  BinaryProvider hiddenBinary = args[1];
+  // 토큰을 통해 isolate 초기화
+  BackgroundIsolateBinaryMessenger.ensureInitialized(args[0]!);
+
+  XFile image = args[1];
+  BinaryProvider hiddenBinary = args[2];
   return addHiddenBit(image, hiddenBinary);
 }
 
+// 이미지에 텍스트 숨기기
 Future<Image> addHiddenBit(XFile image, BinaryProvider hiddenBinary) async {
   Image? img = decodeImage(await image.readAsBytes());
 
@@ -174,7 +183,7 @@ Future<Image> addHiddenBit(XFile image, BinaryProvider hiddenBinary) async {
       img.setPixel(x, y, ColorInt8.rgb(r, g, b));
     }
 
-    if (hiddenBinary.nextEnd() > 1){
+    if (hiddenBinary.nextEnd() > 1) {
       break;
     }
   }
