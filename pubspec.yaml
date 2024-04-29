@@ -41,8 +41,8 @@ dependencies:
   permission_handler: ^8.1.6
   intl: ^0.17.0
   external_path: ^1.0.3
-  shared_preferences: ^2.0.8
-
+  flutter_exif_rotation: ^0.5.1
+  
 dev_dependencies:
   flutter_test:
     sdk: flutter

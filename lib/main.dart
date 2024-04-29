@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
+import 'package:image/image.dart';
 import 'package:image_signer_camera/image_signer_and_validator.dart';
 import 'package:image_signer_camera/save_image.dart';
 import 'package:path_provider/path_provider.dart';
@@ -79,7 +80,6 @@ class _CameraScreenState extends State<CameraScreen> {
   late CameraController _controller;
   late Future<void> _initializeControllerFuture;
   File? _latestImage;
-  bool _isLoading = false;
   int _runningTasks = 0;
   RootIsolateToken rootIsolateToken = RootIsolateToken.instance!;
 
@@ -107,7 +107,17 @@ class _CameraScreenState extends State<CameraScreen> {
       _runningTasks++;
     });
     await _initializeControllerFuture;
-    final image = await _controller.takePicture();
+    var image = await _controller.takePicture();
+
+    // 기기 방향 확인
+    Orientation orientation = MediaQuery.of(context).orientation;
+
+    // 방향이 landscape인 경우 이미지를 90도 회전
+    if (orientation == Orientation.landscape) {
+      img.Image imageBytes = img.decodeImage(await image.readAsBytes())!;
+      img.Image rotatedImage = img.copyRotate(imageBytes, angle: 90);
+      image = await imageToXFile(rotatedImage);
+    }
 
     processImage(image).then((_) {
       setState(() {
@@ -127,6 +137,33 @@ class _CameraScreenState extends State<CameraScreen> {
 
     // 이미지 저장 (compute 사용)
     await compute(saveImageWrapper, [rootIsolateToken, signedImage]);
+  }
+
+  // Image -> XFile
+  Future<XFile> imageToXFile(img.Image image) async {
+    // 이미지를 바이트 배열로 변환
+    List<int> imageBytes = img.encodePng(image);
+
+    // 바이트 배열을 파일로 저장
+    Directory tempDir = await getTemporaryDirectory();
+    File tempFile = File('${tempDir.path}/temp.png');
+    await tempFile.writeAsBytes(imageBytes);
+
+    // 파일의 경로를 사용하여 XFile 객체를 생성
+    XFile xfile = XFile(tempFile.path);
+
+    return xfile;
+  }
+
+  // XFile -> Image
+  Future<img.Image> xFileToImage(XFile xfile) async {
+    // 파일을 바이트 배열로 읽기
+    Uint8List imageBytes = await File(xfile.path).readAsBytes();
+
+    // 바이트 배열을 이미지로 변환
+    img.Image image = img.decodeImage(imageBytes)!;
+
+    return image;
   }
 
   // 카메라 전환
