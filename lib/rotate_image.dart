@@ -9,7 +9,7 @@ Future<XFile> rotateImage(List<dynamic> args) async {
   BackgroundIsolateBinaryMessenger.ensureInitialized(args[0]);
 
   XFile image = args[1];
-  int adjustedAngle = args[2];
+  num adjustedAngle = 360 - args[2];
 
   img.Image imageBytes = img.decodeImage(await image.readAsBytes())!;
   img.Image rotatedImage = img.copyRotate(imageBytes, angle: adjustedAngle);

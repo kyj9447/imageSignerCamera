@@ -114,10 +114,6 @@ class _CameraScreenState extends State<CameraScreen> {
   // 실행 중인 작업 수
   int _runningTasks = 0;
 
-  // 가속도계 이벤트 저장
-  AccelerometerEvent? accelerometerEvent;
-  StreamSubscription? accelerometerSubscription;
-
   // 루트 isolate 토큰
   RootIsolateToken rootIsolateToken = RootIsolateToken.instance!;
 
@@ -140,7 +136,7 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   // 사진 촬영
-  Future<void> takeAndSignPicture(double adjustedAngleRadian) async {
+  Future<void> takeAndSignPicture(double adjusted90AngleRadian) async {
     setState(() {
       _runningTasks++;
     });
@@ -148,12 +144,11 @@ class _CameraScreenState extends State<CameraScreen> {
     var image = await _controller.takePicture();
 
     // 라디안을 각도로 변환
-    int adjustedAngle = adjustedAngleRadian * 180 ~/ pi;
-    adjustedAngle += 180; // !180도 회전!
+    int adjusted90Angle = adjusted90AngleRadian * 180 ~/ pi;
 
     // 이미지 회전 (compute 사용)
     image =
-        await compute(rotateImage, [rootIsolateToken, image, adjustedAngle]);
+        await compute(rotateImage, [rootIsolateToken, image, adjusted90Angle]);
 
     processImage(image).then((_) {
       setState(() {
@@ -257,21 +252,23 @@ class _CameraScreenState extends State<CameraScreen> {
             stream: accelerometerEventStream(),
             builder: (BuildContext context,
                 AsyncSnapshot<AccelerometerEvent> snapshot) {
+              double angle = 0;
               double adjustedAngle = 0;
+              double angleInDegrees = 0;
 
               // 각도 계산
               if (snapshot.hasData) {
-                double angle = atan2(snapshot.data!.y, snapshot.data!.x);
-                double angleInDegrees = angle * 180 / pi;
+                angle = atan2(snapshot.data!.x, snapshot.data!.y);
+                angleInDegrees = angle * 180 / pi + 180;
                 adjustedAngle = 0;
-                if (angleInDegrees >= 315 || angleInDegrees < 45) {
-                  adjustedAngle = pi / 2;
-                } else if (angleInDegrees >= 45 && angleInDegrees < 135) {
+                if (225 >= angleInDegrees && angleInDegrees > 135) {
                   adjustedAngle = 0;
-                } else if (angleInDegrees >= 135 && angleInDegrees < 225) {
-                  adjustedAngle = 3 * pi / 2;
-                } else if (angleInDegrees >= 225 && angleInDegrees < 315) {
+                } else if (315 >= angleInDegrees && angleInDegrees > 225) {
+                  adjustedAngle = pi / 2;
+                } else if (45 >= angleInDegrees || angleInDegrees > 315) {
                   adjustedAngle = pi;
+                } else if (135 >= angleInDegrees && angleInDegrees > 45) {
+                  adjustedAngle = 3 * pi / 2;
                 }
               }
               return Expanded(
@@ -322,7 +319,17 @@ class _CameraScreenState extends State<CameraScreen> {
                             onPressed: switchCamera,
                             child: const Icon(Icons.switch_camera),
                           ),
-                        )
+                        ),
+
+                        // 2-4. 각도 표시 (임시)
+                        const Padding(padding: EdgeInsets.all(20)),
+                        Transform.rotate(
+                          angle: 0,
+                          child: Text(
+                            angleInDegrees.toStringAsFixed(4),
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        ),
                       ],
                     ),
                   ),
