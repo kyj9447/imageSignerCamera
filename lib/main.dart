@@ -141,7 +141,7 @@ class _CameraScreenState extends State<CameraScreen> {
       _runningTasks++;
     });
     await _initializeControllerFuture;
-    var image = await _controller.takePicture();
+    XFile image = await _controller.takePicture();
 
     // 라디안을 각도로 변환
     int adjusted90Angle = adjusted90AngleRadian * 180 ~/ pi;
@@ -150,14 +150,12 @@ class _CameraScreenState extends State<CameraScreen> {
     image =
         await compute(rotateImage, [rootIsolateToken, image, adjusted90Angle]);
 
-    processImage(image).then((_) {
-      setState(() {
-        _runningTasks--;
-      });
-    });
+    await processImage(image);
+
+    await _loadLatestImage();
 
     setState(() {
-      _latestImage = File(image.path);
+      _runningTasks--;
     });
   }
 
