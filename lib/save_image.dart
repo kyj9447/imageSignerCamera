@@ -8,7 +8,7 @@ import 'package:intl/intl.dart';
 // compute()용 wrapper
 Future<void> saveImageWrapper(List<dynamic> args) async {
   // 토큰을 통해 isolate 초기화
-  BackgroundIsolateBinaryMessenger.ensureInitialized(args[0]!);
+  BackgroundIsolateBinaryMessenger.ensureInitialized(args[0]);
 
   img.Image image = args[1];
   return saveImage(image);

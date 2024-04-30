@@ -17,14 +17,14 @@ class BinaryProvider {
   int endBinaryIndexMin;
 
   BinaryProvider(String hiddenString)
-      : endBinary = '',
-        hiddenBinary = '',
+      : hiddenBinary = '',
         hiddenBinaryIndex = 0,
         hiddenBinaryIndexMax = 0,
         startString = '',
         startBinary = '',
         startBinaryIndex = 0,
         startBinaryIndexMax = 0,
+        endBinary = '',
         endString = '',
         endBinaryIndex = 0,
         endBinaryIndexMin = 0 {
@@ -79,7 +79,7 @@ class BinaryProvider {
 // compute()용 wrapper
 Future<Image> addHiddenBitWrapper(List<dynamic> args) async {
   // 토큰을 통해 isolate 초기화
-  BackgroundIsolateBinaryMessenger.ensureInitialized(args[0]!);
+  BackgroundIsolateBinaryMessenger.ensureInitialized(args[0]);
 
   XFile image = args[1];
   BinaryProvider hiddenBinary = args[2];

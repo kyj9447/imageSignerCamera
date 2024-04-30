@@ -8,7 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
-import 'package:image_signer_camera/image_signer_and_validator.dart';
+import 'package:image_signer_camera/image_signer.dart';
 import 'package:image_signer_camera/rotate_image.dart';
 import 'package:image_signer_camera/save_image.dart';
 import 'package:path_provider/path_provider.dart';
@@ -319,15 +319,15 @@ class _CameraScreenState extends State<CameraScreen> {
                           ),
                         ),
 
-                        // 2-4. 각도 표시 (임시)
-                        const Padding(padding: EdgeInsets.all(20)),
-                        Transform.rotate(
-                          angle: 0,
-                          child: Text(
-                            angleInDegrees.toStringAsFixed(4),
-                            style: const TextStyle(color: Colors.white),
-                          ),
-                        ),
+                        //// 2-4. 각도 표시 (임시)
+                        //const Padding(padding: EdgeInsets.all(20)),
+                        //Transform.rotate(
+                        //  angle: 0,
+                        //  child: Text(
+                        //    angleInDegrees.toStringAsFixed(4),
+                        //    style: const TextStyle(color: Colors.white),
+                        //  ),
+                        //),
                       ],
                     ),
                   ),
