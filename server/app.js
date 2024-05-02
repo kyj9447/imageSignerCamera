@@ -56,25 +56,61 @@ app.post('/upload', upload.single('image'), async (req, res) => {
     // [2] = 복호화 대상(일부)
     // [3] = END-VALIDATION
 
-    // 복호화 대상
-    const decryptionTarget = deduplicated[1];
-    //console.log("decryptionTarget : " + decryptionTarget);
+    // 복호화
+    decrypted = decryptArray(deduplicated);
+
+
+    // 중복제거, 복호화 완료된 배열의 길이를 확인하여 성공/실패 여부 판단
+    const lenthCheck = (decrypted.length <= 4) ? true : false;
+
+    // 시작,끝 부분 검사
+    const startCheck = (decrypted[0] === "START-VALIDATION") ? true : false;
+    const endCheck = (decrypted[deduplicated.length - 1] === "END-VALIDATION") ? true : false;
+
+    // 최종 결과
+    // 모두 true일 경우 Success, 하나라도 false일 경우 Fail
+    const verdict = (lenthCheck && startCheck && endCheck) ? "Success" : "Fail";
+
+    // 중복제거, 복호화 완료 결과 join
+    let validation = decrypted.join('\n<br>'); // 줄바꿈을 <br>로 변경
+
+    // html 형식 작성
+    const validationResult = "<h1>Validation Result : " + verdict + "</h1>" + validation;
+
+    res.send(validationResult);
+});
+
+function decryptArray(deduplicated) {
 
     // Private key를 읽음
     const privateKey = fs.readFileSync('private_key.pem', 'utf8');
 
-    // deduplicated의 두 번째 요소를 복호화
-    let buffer = Buffer.from(deduplicated[1], 'base64');
-    let decrypted = crypto.privateDecrypt({
-        key: privateKey,
-        padding: crypto.constants.RSA_PKCS1_PADDING
-    }, buffer);
+    // deduplicated의 첫 번째와 마지막 요소를 제외한 모든 요소를 복호화
+    deduplicated = deduplicated.map((item, index) => {
+        if (index === 0 || index === deduplicated.length - 1) {
+            return item;
+        } else {
+            try {
+                let buffer = Buffer.from(item, 'base64');
+                let decrypted = crypto.privateDecrypt({
+                    key: privateKey,
+                    padding: crypto.constants.RSA_PKCS1_PADDING
+                }, buffer);
+                //console.log("Decrypted : "+decrypted.toString());
+                return decrypted.toString();
+            }
+            // 복호화 실패 시 그대로 유지
+            catch (e) {
+                //console.log(e);
+                return item;
+            }
+        }
+    });
 
-    // 복호화된 문자열로 교체합니다.
-    deduplicated[1] = decrypted.toString();
+    return deduplicated;
+}
 
-    // 중복제거, 복호화 완료 결과
-    let validation = deduplicated.join('\n');
-
-    res.send(validation);
+// APK 다운로드
+app.get('/apk', async (req, res) => {
+    res.download('../build/app/outputs/flutter-apk/app-release.apk', 'imageSignerCamera.apk');
 });
