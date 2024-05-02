@@ -1,16 +1,27 @@
-# image_signer_camera
+## image_signer_camera
+(/lib/main.dart)
 
-A new Flutter project.
+특정 암호화된 문자열을 주입하는 Flutter 카메라 어플리케이션
 
-## Getting Started
+비대칭 키 쌍 중 공개 키를 가지고 있습니다
 
-This project is a starting point for a Flutter application.
+(현재 소스에는 문자열 "Hello, World!"를 암호화 한 뒤 주입합니다.)
 
-A few resources to get you started if this is your first Flutter project:
+기기의 자이로스코프 값을 읽어 버튼 아이콘 회전, 사진 저장시 적절한 방향으로 회전하는데 사용
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## imageValidator server
+(/server/app.js)
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+암호화된 문자열이 주입된 이미지 submit -> 암호화된 문자열 추출 -> 복호화하여 내용 확인
+
+비대칭 키 쌍 중 개인 키를 가지고 있습니다
+
+### 서버 출력 예시
+
+START-VALIDATION  (시작지점 암호화 안된 문자열)
+
+Hello, World! (주입된 문자열)
+
+Sxu/jim2TwEV8US4tQxNuN8a/jnsFkYLsRW59g36oQ3 (암호화된 문자열의 일부(복호화 불가능))
+
+END-VALIDATION (끝지점 암호와 안된 문자열)
