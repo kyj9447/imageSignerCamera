@@ -60,10 +60,10 @@ app.post('/upload', upload.single('image'), async (req, res) => {
     const decryptionTarget = deduplicated[1];
     //console.log("decryptionTarget : " + decryptionTarget);
 
-    // Private key를 읽어옵니다.
+    // Private key를 읽음
     const privateKey = fs.readFileSync('private_key.pem', 'utf8');
 
-    // deduplicated의 두 번째 요소를 복호화합니다.
+    // deduplicated의 두 번째 요소를 복호화
     let buffer = Buffer.from(deduplicated[1], 'base64');
     let decrypted = crypto.privateDecrypt({
         key: privateKey,

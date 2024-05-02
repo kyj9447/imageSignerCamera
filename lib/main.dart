@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:android_intent_plus/android_intent.dart';
 import 'package:external_path/external_path.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -34,6 +35,19 @@ Future<void> requestStoragePermission() async {
   var status = await Permission.storage.status;
   if (!status.isGranted) {
     status = await Permission.storage.request();
+  }
+}
+
+// 저장소 미디어스캔 실행
+void medaiScan(String path) {
+  if (Platform.isAndroid) {
+    // 미디어 스캔 실행
+    AndroidIntent intent = AndroidIntent(
+      action: 'android.intent.action.MEDIA_SCANNER_SCAN_FILE',
+      data: Uri.file(path).toString(),
+      package: 'com.android.gallery3d',
+    );
+    intent.launch();
   }
 }
 
@@ -158,6 +172,9 @@ class _CameraScreenState extends State<CameraScreen> {
     setState(() {
       _runningTasks--;
     });
+
+    // 미디어 스캔 실행
+    medaiScan(image.path);
   }
 
   Future<void> processImage(XFile image) async {
