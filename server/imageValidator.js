@@ -1,5 +1,7 @@
 const Jimp = require('jimp');
 module.exports = { validateImage };
+
+// binary -> 문자열 변환
 function binaryToString(binaryCode) {
     let string = "";
     for (let i = 0; i < binaryCode.length; i += 8) {
@@ -11,6 +13,7 @@ function binaryToString(binaryCode) {
     return string;
 }
 
+// 이미지에 숨겨진 비트 추출
 async function readHiddenBit(imagePath) {
     let hiddenBinary = "";
 
@@ -40,6 +43,7 @@ async function readHiddenBit(imagePath) {
     return hiddenBinary;
 }
 
+// (main) 이미지 유효성 검사 
 async function validateImage(imagePath) {
     let resultBinary = await readHiddenBit(imagePath);
     let resultString = binaryToString(resultBinary);

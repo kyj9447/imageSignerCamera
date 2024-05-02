@@ -50,18 +50,19 @@ app.post('/upload', upload.single('image'), async (req, res) => {
         }
     }
 
-    // deduplicated의 구조
+    // 정상적인 deduplicated의 구조
     // [0] = START-VALIDATION
     // [1] = 복호화 대상
     // [2] = 복호화 대상(일부)
     // [3] = END-VALIDATION
 
     // 복호화
-    decrypted = decryptArray(deduplicated);
+    const decrypted = decryptArray(deduplicated);
 
 
     // 중복제거, 복호화 완료된 배열의 길이를 확인하여 성공/실패 여부 판단
-    const lenthCheck = (decrypted.length <= 4) ? true : false;
+    // 정상적인 경우, deduplicated의 길이는 3 또는 4임
+    const lenthCheck = (decrypted.length == 3 || decrypted.length == 4) ? true : false;
 
     // 시작,끝 부분 검사
     const startCheck = (decrypted[0] === "START-VALIDATION") ? true : false;
@@ -72,7 +73,7 @@ app.post('/upload', upload.single('image'), async (req, res) => {
     const verdict = (lenthCheck && startCheck && endCheck) ? "Success" : "Fail";
 
     // 중복제거, 복호화 완료 결과 join
-    let validation = decrypted.join('\n<br>'); // 줄바꿈을 <br>로 변경
+    const validation = decrypted.join('<br>'); // 줄바꿈을 <br>로 변경
 
     // html 형식 작성
     const validationResult = "<h1>Validation Result : " + verdict + "</h1>" + validation;
@@ -80,16 +81,18 @@ app.post('/upload', upload.single('image'), async (req, res) => {
     res.send(validationResult);
 });
 
+// 배열 복호화 (처음, 끝 요소 제외)
 function decryptArray(deduplicated) {
 
     // Private key를 읽음
     const privateKey = fs.readFileSync('private_key.pem', 'utf8');
 
     // deduplicated의 첫 번째와 마지막 요소를 제외한 모든 요소를 복호화
-    deduplicated = deduplicated.map((item, index) => {
+    const decrypted = deduplicated.map((item, index) => {
         if (index === 0 || index === deduplicated.length - 1) {
             return item;
         } else {
+            // base64 디코딩 후 복호화 시도 (손상된 문자열은 복호화 실패함)
             try {
                 let buffer = Buffer.from(item, 'base64');
                 let decrypted = crypto.privateDecrypt({
@@ -107,7 +110,7 @@ function decryptArray(deduplicated) {
         }
     });
 
-    return deduplicated;
+    return decrypted;
 }
 
 // APK 다운로드
