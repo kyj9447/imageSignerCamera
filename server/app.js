@@ -115,5 +115,10 @@ function decryptArray(deduplicated) {
 
 // APK 다운로드
 app.get('/apk', async (req, res) => {
-    res.download('../build/app/outputs/flutter-apk/app-release.apk', 'imageSignerCamera.apk');
+    const filePath = '../build/app/outputs/flutter-apk/app-release.apk';
+    if (fs.existsSync(filePath)) {
+        res.download(filePath, 'imageSignerCamera.apk');
+    } else {
+        res.status(404).send('File not found');
+    }
 });
