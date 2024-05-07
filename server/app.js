@@ -72,22 +72,29 @@ app.post("/upload", upload.single("image"), async (req, res) => {
   // 복호화
   const decrypted = decryptArray(deduplicated);
 
-  // 중복제거, 복호화 완료된 배열의 길이를 확인하여 성공/실패 여부 판단
+  // 복호화된 배열 길이
+  const arrayLength = decrypted.length;
+
+  // 1. 중복제거, 복호화 완료된 배열의 길이를 확인하여 성공/실패 여부 판단
   // 정상적인 경우, deduplicated의 길이는 3 또는 4임
-  const lenthCheck =
-    decrypted.length == 3 || decrypted.length == 4 ? true : false;
+  const lenthCheck = arrayLength == 3 || arrayLength == 4 ? true : false;
 
-  // 시작,끝 부분 검사
+  // 2. 시작,끝 부분 검사
   const startCheck = decrypted[0] === "START-VALIDATION" ? true : false;
-  const endCheck = decrypted[deduplicated.length - 1] === "END-VALIDATION" ? true : false;
+  const endCheck = decrypted[arrayLength - 1] === "END-VALIDATION" ? true : false;
 
-  // 두번째 요소 복호화 여부 확인 (==로 끝나면 암호화된 문자열임)
-  const secondElement = decrypted[1];
-  const isDecrypted = !secondElement.endsWith("==");
+  // 3. 시작, 끝 부분이 암호화 -> 복호화 되지 않은경우
+  // 복호화 하지 않은 START-VALIDATION, END-VALIDATION이 deduplicated에 있으면 false
+  const startIsCrypted = deduplicated[0] === "START-VALIDATION" ? false : true;
+  const endIsCrypted = deduplicated[arrayLength - 1] === "END-VALIDATION" ? false : true;
+
+  // 4. 두번째 요소 복호화 여부 확인 (==로 끝나면 암호화된 문자열임)
+  const isDecrypted = !decrypted[1].endsWith("==");
 
   // 최종 결과
   // 모두 true일 경우 Success, 하나라도 false일 경우 Fail
-  const verdict = lenthCheck && startCheck && endCheck && isDecrypted ? "Success" : "Fail";
+  const verdict =
+    lenthCheck && startCheck && endCheck && isDecrypted && startIsCrypted && endIsCrypted ? "Success" : "Fail";
 
   // 중복제거, 복호화 완료 결과 join
   //const validation = decrypted.join('<br>'); // 줄바꿈을 <br>로 변경
