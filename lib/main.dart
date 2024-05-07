@@ -162,8 +162,7 @@ class _CameraScreenState extends State<CameraScreen> {
     int adjusted90Angle = adjusted90AngleRadian * 180 ~/ pi;
 
     // 이미지 회전 (compute 사용)
-    image =
-        await compute(rotateImage, [rootIsolateToken, image, adjusted90Angle]);
+    image = await compute(rotateImage, [rootIsolateToken, image, adjusted90Angle]);
 
     await processImage(image);
 
