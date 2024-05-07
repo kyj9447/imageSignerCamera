@@ -34,26 +34,21 @@ Future<String> stringCryptor(String str) async {
   var rsaPublicKey =
       RSAPublicKey(modulus.valueAsBigInteger, exponent.valueAsBigInteger);
 
-  // // 암호화
-  // var encrypter = Encrypter(RSA(publicKey: rsaPublicKey));
-  // var encrypted = encrypter.encrypt(str);
+  // // 공개 키를 사용하여 RSA 엔진 초기화
+  // RSAEngine engine = RSAEngine()..init(true, PublicKeyParameter<RSAPublicKey> (rsaPublicKey));
 
-  // return encrypted.base64;
+  // // OAEP 패딩을 적용
+  // OAEPEncoding encoder = OAEPEncoding(engine);
+
+  // // 암호화
+  // Uint8List plainText = utf8.encode(str);
+  // Uint8List cipherText = encoder.process(plainText);
+
+  // return base64Encode(cipherText);
 
   // 암호화
-  var secureRandom = FortunaRandom();
-  secureRandom.seed(KeyParameter(Uint8List.fromList(
-      DateTime.now().millisecondsSinceEpoch.toRadixString(16).codeUnits)));
-  var params = RSAKeyGeneratorParameters(BigInt.from(65537), 2048, 12);
-  var keyGenerator = RSAKeyGenerator()
-    ..init(ParametersWithRandom(params, secureRandom));
-  var pair = keyGenerator.generateKeyPair();
-  var myPublic = pair.publicKey as RSAPublicKey;
+  var encrypter = Encrypter(RSA(publicKey: rsaPublicKey));
+  var encrypted = encrypter.encrypt(str);
 
-  var cipher = PKCS1Encoding(RSAEngine())
-    ..init(true, PublicKeyParameter<RSAPublicKey>(myPublic)); // true=encrypt
-
-  var out = cipher.process(utf8.encode(str));
-
-  return base64Encode(out);
+  return encrypted.base64;
 }

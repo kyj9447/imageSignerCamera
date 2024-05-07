@@ -101,7 +101,7 @@ app.post("/upload", upload.single("image"), async (req, res) => {
   res.send(validationResult);
 });
 
-// 배열 복호화 (처음, 끝 요소 제외)
+// 배열 복호화 (처음, 끝 요소 포함)
 function decryptArray(deduplicated) {
   // Private key를 읽음
   const privateKey = fs.readFileSync("private_key.pem", "utf8");
@@ -118,7 +118,7 @@ function decryptArray(deduplicated) {
         let decrypted = crypto.privateDecrypt(
           {
             key: privateKey,
-            padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
+            padding: crypto.constants.RSA_PKCS1_PADDING,
           },
           buffer
         );
