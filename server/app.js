@@ -79,12 +79,15 @@ app.post("/upload", upload.single("image"), async (req, res) => {
 
   // 시작,끝 부분 검사
   const startCheck = decrypted[0] === "START-VALIDATION" ? true : false;
-  const endCheck =
-    decrypted[deduplicated.length - 1] === "END-VALIDATION" ? true : false;
+  const endCheck = decrypted[deduplicated.length - 1] === "END-VALIDATION" ? true : false;
+
+  // 두번째 요소 복호화 여부 확인 (==로 끝나면 암호화된 문자열임)
+  const secondElement = decrypted[1];
+  const isDecrypted = !secondElement.endsWith("==");
 
   // 최종 결과
   // 모두 true일 경우 Success, 하나라도 false일 경우 Fail
-  const verdict = lenthCheck && startCheck && endCheck ? "Success" : "Fail";
+  const verdict = lenthCheck && startCheck && endCheck && isDecrypted ? "Success" : "Fail";
 
   // 중복제거, 복호화 완료 결과 join
   //const validation = decrypted.join('<br>'); // 줄바꿈을 <br>로 변경

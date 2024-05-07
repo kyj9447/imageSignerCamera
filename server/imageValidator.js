@@ -43,7 +43,7 @@ async function readHiddenBit(imagePath) {
     return hiddenBinary;
 }
 
-// (main) 이미지 유효성 검사 
+// (main) 이미지 문자열 추출 
 async function validateImage(imagePath) {
     let resultBinary = await readHiddenBit(imagePath);
     let resultString = binaryToString(resultBinary);
