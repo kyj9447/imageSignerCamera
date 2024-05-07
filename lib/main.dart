@@ -179,8 +179,15 @@ class _CameraScreenState extends State<CameraScreen> {
 
   Future<void> processImage(XFile image) async {
     // 이미지에 텍스트 숨기기 (compute 사용)
-    img.Image signedImage = await compute(addHiddenBitWrapper,
-        [rootIsolateToken, image, BinaryProvider('${await stringCryptor('Hello, World!')}\n')]);
+    img.Image signedImage = await compute(addHiddenBitWrapper, [
+      rootIsolateToken,
+      image,
+      BinaryProvider(
+        '${await stringCryptor('START-VALIDATION')}\n',
+        '${await stringCryptor('Hello, World!')}\n',
+        '\n${await stringCryptor('END-VALIDATION')}',
+      )
+    ]);
 
     // 이미지 저장 (compute 사용)
     await compute(saveImageWrapper, [rootIsolateToken, signedImage]);

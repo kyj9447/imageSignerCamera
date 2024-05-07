@@ -16,7 +16,7 @@ class BinaryProvider {
   int endBinaryIndex;
   int endBinaryIndexMin;
 
-  BinaryProvider(String hiddenString)
+  BinaryProvider(String startString, String hiddenString, String endString)
       : hiddenBinary = '',
         hiddenBinaryIndex = 0,
         hiddenBinaryIndexMax = 0,
@@ -32,12 +32,10 @@ class BinaryProvider {
     hiddenBinaryIndex = 0;
     hiddenBinaryIndexMax = hiddenBinary.length;
 
-    startString = "START-VALIDATION\n";
     startBinary = strToBinary(startString);
     startBinaryIndex = 0;
     startBinaryIndexMax = startBinary.length;
 
-    endString = "\nEND-VALIDATION";
     endBinary = strToBinary(endString);
     endBinaryIndex = endBinary.length - 1;
     endBinaryIndexMin = 0;

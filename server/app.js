@@ -12,16 +12,16 @@ app.get('/', (req, res) => {
 });
 
 app.listen(3000, () => {
-    console.log('Server is running on http://localhost:3000');
+    console.log('Server is running on port 3000');
 });
 
 // 파일 업로드를 위한 multer 설정
 const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/');
+    destination: (req, file, callBack) => {
+        callBack(null, 'uploads/');
     },
-    filename: (req, file, cb) => {
-        cb(null, file.originalname);
+    filename: (req, file, callBack) => {
+        callBack(null, file.originalname);
     }
 });
 
@@ -43,7 +43,7 @@ app.post('/upload', upload.single('image'), async (req, res) => {
     const extractedArray = extracted.split("\n")
 
     // 중복 제거
-    let deduplicated = [];
+    const deduplicated = [];
     for (let i = 0; i < extractedArray.length; i++) {
         if (i === 0 || extractedArray[i] !== extractedArray[i - 1]) {
             deduplicated.push(extractedArray[i]);
@@ -76,7 +76,11 @@ app.post('/upload', upload.single('image'), async (req, res) => {
     const validation = decrypted.join('<br>'); // 줄바꿈을 <br>로 변경
 
     // html 형식 작성
-    const validationResult = "<h1>Validation Result : " + verdict + "</h1>" + validation;
+    const validationResult =
+        "<h1>Validation Result : " + verdict + "</h1>"
+        + validation + "<br>"
+        + "<h2>RAW DATA</h2>"
+        + deduplicated.join('<br>');
 
     res.send(validationResult);
 });
@@ -89,26 +93,27 @@ function decryptArray(deduplicated) {
 
     // deduplicated의 첫 번째와 마지막 요소를 제외한 모든 요소를 복호화
     const decrypted = deduplicated.map((item, index) => {
-        if (index === 0 || index === deduplicated.length - 1) {
-            return item;
-        } else {
-            // base64 디코딩 후 복호화 시도 (손상된 문자열은 복호화 실패함)
-            try {
-                let buffer = Buffer.from(item, 'base64');
-                let decrypted = crypto.privateDecrypt({
-                    key: privateKey,
-                    padding: crypto.constants.RSA_PKCS1_PADDING
-                }, buffer);
-                //console.log("Decrypted : "+decrypted.toString());
-                return decrypted.toString();
-            }
-            // 복호화 실패 시 그대로 유지
-            catch (e) {
-                //console.log(e);
-                return item;
-            }
+        // if (index === 0 || index === deduplicated.length - 1) {
+        //     return item;
+        // } else {
+        // base64 디코딩 후 복호화 시도 (손상된 문자열은 복호화 실패함)
+        try {
+            let buffer = Buffer.from(item, 'base64');
+            let decrypted = crypto.privateDecrypt({
+                key: privateKey,
+                padding: crypto.constants.RSA_PKCS1_PADDING
+            }, buffer);
+            //console.log("Decrypted : "+decrypted.toString());
+            return decrypted.toString();
         }
-    });
+        // 복호화 실패 시 그대로 유지
+        catch (e) {
+            //console.log(e);
+            return item;
+        }
+    }
+        //}
+    );
 
     return decrypted;
 }
