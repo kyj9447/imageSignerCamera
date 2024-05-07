@@ -73,13 +73,13 @@ app.post('/upload', upload.single('image'), async (req, res) => {
     const verdict = (lenthCheck && startCheck && endCheck) ? "Success" : "Fail";
 
     // 중복제거, 복호화 완료 결과 join
-    const validation = decrypted.join('<br>'); // 줄바꿈을 <br>로 변경
+    //const validation = decrypted.join('<br>'); // 줄바꿈을 <br>로 변경
 
     // html 형식 작성
     const validationResult =
         "<h1>Validation Result : " + verdict + "</h1>"
-        + validation + "<br>"
-        + "<h2>RAW DATA</h2>"
+        + decrypted.join('<br>')
+        + "<h4>(복호화 전 중복제거된 DATA)</h4>"
         + deduplicated.join('<br>');
 
     res.send(validationResult);
