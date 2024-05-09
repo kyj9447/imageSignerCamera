@@ -13,6 +13,7 @@ Key Pair 중 공개 키를 가지고 있습니다.
 <br><img src="https://github.com/kyj9447/imageSignerCamera/assets/122734245/8b7bc658-5864-4cfe-8a56-24f757cf11ec" width=600px><br>
 
 ##### flutter 앱 빌드
+<sup>(/assets 폴더에 public_key.pem 파일이 필요합니다. - 문자열 암호화용 키 / 소스에 포함됨)</sup>
 ```sh
 flutter clean
 flutter pub get
@@ -35,6 +36,9 @@ Key Pair 중 개인 키를 가지고 있습니다.
 <br><img src="https://github.com/kyj9447/imageSignerCamera/assets/122734245/097da77e-5ae7-4e81-859c-06ef72c3a6b6" width=400px><br>
 
 ##### server 실행법
+<sup>(/server/SSL 폴더에 cert1.pem, privkey1.pem, chain1.pem 파일이 필요합니다. - HTTPS 서버용 키 / 별도 발급 필요)</sup>
+
+<sup>(/server 폴더에 private_key.pem 파일이 필요합니다. - 문자열 복호화용 키 / 소스에 포함됨)</sup>
 ```sh
 cd server
 npm install
