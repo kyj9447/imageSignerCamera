@@ -162,7 +162,8 @@ class _CameraScreenState extends State<CameraScreen> {
     int adjusted90Angle = adjusted90AngleRadian * 180 ~/ pi;
 
     // 이미지 회전 (compute 사용)
-    image = await compute(rotateImage, [rootIsolateToken, image, adjusted90Angle]);
+    image =
+        await compute(rotateImage, [rootIsolateToken, image, adjusted90Angle]);
 
     await processImage(image);
 
@@ -177,14 +178,22 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   Future<void> processImage(XFile image) async {
+
+    // 암호화 문자열 제공
+    final cryptedString = await Future.wait([
+      stringCryptor('START-VALIDATION'),
+      stringCryptor('Hello, World!'),
+      stringCryptor('END-VALIDATION'),
+    ]);
+
     // 이미지에 텍스트 숨기기 (compute 사용)
     img.Image signedImage = await compute(addHiddenBitWrapper, [
       rootIsolateToken,
       image,
       BinaryProvider(
-        '${await stringCryptor('START-VALIDATION')}\n',
-        '${await stringCryptor('Hello, World!')}\n',
-        '\n${await stringCryptor('END-VALIDATION')}',
+        '${cryptedString[0]}\n',
+        '${cryptedString[1]}\n',
+        '\n${cryptedString[2]}',
       )
     ]);
 
