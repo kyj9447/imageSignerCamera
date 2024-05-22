@@ -81,12 +81,14 @@ app.post("/upload", upload.single("image"), async (req, res) => {
 
   // 2. 시작,끝 부분 검사
   const startCheck = decrypted[0] === "START-VALIDATION" ? true : false;
-  const endCheck = decrypted[arrayLength - 1] === "END-VALIDATION" ? true : false;
+  const endCheck =
+    decrypted[arrayLength - 1] === "END-VALIDATION" ? true : false;
 
   // 3. 시작, 끝 부분이 암호화 -> 복호화 되지 않은경우
   // 복호화 하지 않은 START-VALIDATION, END-VALIDATION이 deduplicated에 있으면 false
   const startIsCrypted = deduplicated[0] === "START-VALIDATION" ? false : true;
-  const endIsCrypted = deduplicated[arrayLength - 1] === "END-VALIDATION" ? false : true;
+  const endIsCrypted =
+    deduplicated[arrayLength - 1] === "END-VALIDATION" ? false : true;
 
   // 4. 두번째 요소 복호화 여부 확인 (==로 끝나면 암호화된 문자열임)
   const isDecrypted = !decrypted[1].endsWith("==");
@@ -94,7 +96,14 @@ app.post("/upload", upload.single("image"), async (req, res) => {
   // 최종 결과
   // 모두 true일 경우 Success, 하나라도 false일 경우 Fail
   const verdict =
-    lenthCheck && startCheck && endCheck && isDecrypted && startIsCrypted && endIsCrypted ? "Success" : "Fail";
+    lenthCheck &&
+    startCheck &&
+    endCheck &&
+    isDecrypted &&
+    startIsCrypted &&
+    endIsCrypted
+      ? "<span style='color:blue'>Success</span>"
+      : "<span style='color:red'>Fail</span>";
 
   // 중복제거, 복호화 완료 결과 join
   //const validation = decrypted.join('<br>'); // 줄바꿈을 <br>로 변경
