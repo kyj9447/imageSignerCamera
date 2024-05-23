@@ -10,8 +10,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_signer_camera/image_signer.dart';
-import 'package:image_signer_camera/rotate_image.dart';
-import 'package:image_signer_camera/save_image.dart';
+import 'package:image_signer_camera/process_image.dart';
 import 'package:image_signer_camera/string_cryptor.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -19,12 +18,27 @@ import 'package:sensors_plus/sensors_plus.dart';
 
 List<CameraDescription> cameras = [];
 int cameraIndex = 0;
+BinaryProvider cryptedBinary = BinaryProvider('', '', '');
 
 // main
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   cameras = await availableCameras();
   await requestStoragePermission();
+
+  // 암호화 텍스트 제공
+  List<String> results = await Future.wait([
+    stringCryptor('START-VALIDATION'),
+    stringCryptor('Hello, World!'),
+    stringCryptor('END-VALIDATION'),
+  ]);
+
+  cryptedBinary = BinaryProvider(
+    '${results[0]}\n',
+    '${results[1]}\n',
+    '\n${results[2]}',
+  );
+
   runApp(const ImageSignerCamera());
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky,
       overlays: []);
@@ -156,16 +170,27 @@ class _CameraScreenState extends State<CameraScreen> {
       _runningTasks++;
     });
     await _initializeControllerFuture;
-    XFile image = await _controller.takePicture();
+    XFile xFileImage = await _controller.takePicture();
 
     // 라디안을 각도로 변환
     int adjusted90Angle = adjusted90AngleRadian * 180 ~/ pi;
 
-    // 이미지 회전 (compute 사용)
-    image =
-        await compute(rotateImage, [rootIsolateToken, image, adjusted90Angle]);
+    // // 암호화 텍스트 제공
+    // List<String> results = await Future.wait([
+    //   stringCryptor('START-VALIDATION'),
+    //   stringCryptor('Hello, World!'),
+    //   stringCryptor('END-VALIDATION'),
+    // ]);
 
-    await processImage(image);
+    // BinaryProvider cryptedBinary = BinaryProvider(
+    //   '${results[0]}\n',
+    //   '${results[1]}\n',
+    //   '\n${results[2]}',
+    // );
+
+    // 이미지 처리 함수 실행
+    await compute(processImageWrapper,
+        [xFileImage, adjusted90Angle, cryptedBinary, rootIsolateToken]);
 
     await _loadLatestImage();
 
@@ -174,31 +199,7 @@ class _CameraScreenState extends State<CameraScreen> {
     });
 
     // 미디어 스캔 실행
-    medaiScan(image.path);
-  }
-
-  Future<void> processImage(XFile image) async {
-
-    // 암호화 문자열 제공
-    final cryptedString = await Future.wait([
-      stringCryptor('START-VALIDATION'),
-      stringCryptor('Hello, World!'),
-      stringCryptor('END-VALIDATION'),
-    ]);
-
-    // 이미지에 텍스트 숨기기 (compute 사용)
-    img.Image signedImage = await compute(addHiddenBitWrapper, [
-      rootIsolateToken,
-      image,
-      BinaryProvider(
-        '${cryptedString[0]}\n',
-        '${cryptedString[1]}\n',
-        '\n${cryptedString[2]}',
-      )
-    ]);
-
-    // 이미지 저장 (compute 사용)
-    await compute(saveImageWrapper, [rootIsolateToken, signedImage]);
+    //medaiScan(xFileImage.path);
   }
 
   // 카메라 전환

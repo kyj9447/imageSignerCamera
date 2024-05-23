@@ -1,6 +1,4 @@
 import 'dart:math';
-import 'package:camera/camera.dart';
-import 'package:flutter/services.dart';
 import 'package:image/image.dart';
 
 class BinaryProvider {
@@ -74,21 +72,21 @@ class BinaryProvider {
   }
 }
 
-// compute()용 wrapper
-Future<Image> addHiddenBitWrapper(List<dynamic> args) async {
-  // 토큰을 통해 isolate 초기화
-  BackgroundIsolateBinaryMessenger.ensureInitialized(args[0]);
+// // compute()용 wrapper
+// Future<Image> addHiddenBitWrapper(List<dynamic> args) async {
+//   // 토큰을 통해 isolate 초기화
+//   BackgroundIsolateBinaryMessenger.ensureInitialized(args[0]);
 
-  XFile image = args[1];
-  BinaryProvider hiddenBinary = args[2];
-  return addHiddenBit(image, hiddenBinary);
-}
+//   XFile image = args[1];
+//   BinaryProvider hiddenBinary = args[2];
+//   return addHiddenBit(image, hiddenBinary);
+// }
 
 // 이미지에 텍스트 숨기기
-Future<Image> addHiddenBit(XFile image, BinaryProvider hiddenBinary) async {
-  Image? img = decodeImage(await image.readAsBytes());
+Future<Image> addHiddenBit(Image img, BinaryProvider hiddenBinary) async {
+  // Image? img = decodeImage(await image.readAsBytes());
 
-  for (int y = 0; y < img!.height; y++) {
+  for (int y = 0; y < img.height; y++) {
     for (int x = 0; x < img.width; x++) {
       Color color = img.getPixel(x, y);
       int r = color.r.toInt();

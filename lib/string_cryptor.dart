@@ -6,6 +6,7 @@ import 'package:pointycastle/export.dart';
 import 'package:encrypt/encrypt.dart';
 
 Future<String> stringCryptor(String str) async {
+
   // 공개키 문자열 read
   String publicKeyContent =
       await rootBundle.loadString('assets/public_key.pem');
