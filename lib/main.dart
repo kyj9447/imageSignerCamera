@@ -19,6 +19,7 @@ import 'package:sensors_plus/sensors_plus.dart';
 List<CameraDescription> cameras = [];
 int cameraIndex = 0;
 BinaryProvider cryptedBinary = BinaryProvider('', '', '');
+// BinaryProvider noncryptedBinary = BinaryProvider('', '', '');
 
 // main
 Future<void> main() async {
@@ -26,7 +27,7 @@ Future<void> main() async {
   cameras = await availableCameras();
   await requestStoragePermission();
 
-  // 암호화 텍스트 제공
+  //암호화 텍스트 제공
   List<String> results = await Future.wait([
     stringCryptor('START-VALIDATION'),
     stringCryptor('Hello, World!'),
@@ -36,8 +37,11 @@ Future<void> main() async {
   cryptedBinary = BinaryProvider(
     '${results[0]}\n',
     '${results[1]}\n',
-    '\n${results[2]}',
+    '\n${results[2]}'
   );
+
+  // // 테스트용 비암호화 텍스트
+  // BinaryProvider noncryptedBinary = BinaryProvider('START-VALIDATION\n', 'Hello, World!\n', '\nEND-VALIDATION');
 
   runApp(const ImageSignerCamera());
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky,
@@ -174,19 +178,6 @@ class _CameraScreenState extends State<CameraScreen> {
 
     // 라디안을 각도로 변환
     int adjusted90Angle = adjusted90AngleRadian * 180 ~/ pi;
-
-    // // 암호화 텍스트 제공
-    // List<String> results = await Future.wait([
-    //   stringCryptor('START-VALIDATION'),
-    //   stringCryptor('Hello, World!'),
-    //   stringCryptor('END-VALIDATION'),
-    // ]);
-
-    // BinaryProvider cryptedBinary = BinaryProvider(
-    //   '${results[0]}\n',
-    //   '${results[1]}\n',
-    //   '\n${results[2]}',
-    // );
 
     // 이미지 처리 함수 실행
     await compute(processImageWrapper,

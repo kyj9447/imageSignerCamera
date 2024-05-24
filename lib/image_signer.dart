@@ -132,8 +132,8 @@ Future<Image> addHiddenBit(Image img, BinaryProvider hiddenBinary) async {
     }
   }
 
-  for (int y = img.height - 1; y >= 0; y--) {
-    for (int x = img.width - 1; x >= 0; x--) {
+  for (int y = img.height - 1; y > 0; y--) {
+    for (int x = img.width - 1; x > 0; x--) {
       Color color = img.getPixel(x, y);
       int r = color.r.toInt();
       int g = color.g.toInt();
@@ -157,6 +157,8 @@ Future<Image> addHiddenBit(Image img, BinaryProvider hiddenBinary) async {
       int addDirection = targetColorValue < 127 ? 1 : -1;
 
       int bit = hiddenBinary.nextEnd();
+
+      // 종료 알림 (9일경우 종료로 인식)
       if (bit == 9) {
         break;
       }
