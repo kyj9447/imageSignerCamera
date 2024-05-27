@@ -188,9 +188,6 @@ class _CameraScreenState extends State<CameraScreen> {
     setState(() {
       _runningTasks--;
     });
-
-    // 미디어 스캔 실행
-    //medaiScan(xFileImage.path);
   }
 
   // 카메라 전환
@@ -203,6 +200,7 @@ class _CameraScreenState extends State<CameraScreen> {
     _controller = CameraController(
       cameras[cameraIndex],
       ResolutionPreset.ultraHigh,
+      enableAudio: false
     );
 
     await _controller.initialize();

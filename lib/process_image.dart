@@ -2,6 +2,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_signer_camera/image_signer.dart';
+import 'package:image_signer_camera/main.dart';
 import 'package:image_signer_camera/save_image.dart';
 
 //DateTime startTime = DateTime.now();
@@ -53,6 +54,9 @@ void processImageWrapper(List<dynamic> args) async {
   //print('텍스트 주입 : ${DateTime.now().difference(startTime).inMilliseconds} ms');
 
   // 3. 이미지 저장
-  await saveImage(signedImage);
+  String filePath = await saveImage(signedImage);
   //print('이미지 저장 : ${DateTime.now().difference(startTime).inMilliseconds} ms');
+
+  // 미디어 스캔 실행
+  medaiScan(filePath);
 }
