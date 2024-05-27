@@ -2,15 +2,16 @@ import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_signer_camera/image_signer.dart';
-import 'package:image_signer_camera/main.dart';
 import 'package:image_signer_camera/save_image.dart';
+import 'package:media_scanner/media_scanner.dart';
 
 //DateTime startTime = DateTime.now();
 
 // compute()용 wrapper
-void processImageWrapper(List<dynamic> args) async {
-  //print("processImageWrapper 시작");
+Future<String> processImageWrapper(List<dynamic> args) async {
   //[image, rotateDegree, BinaryProvider, rootIsolateToken]
+
+  //print("processImageWrapper 시작");
 
   // 3. 토큰을 통해 isolate 초기화
   RootIsolateToken rootIsolateToken = args[3];
@@ -24,7 +25,7 @@ void processImageWrapper(List<dynamic> args) async {
   if (rotateDegree == 360) {
     rotateDegree = 0;
   }
-  
+
   //print("회전각도 : $rotateDegree");
 
   // 3. 암호화 텍스트
@@ -43,7 +44,6 @@ void processImageWrapper(List<dynamic> args) async {
   img.Image? imageBytes = img.decodeImage(await xFileImage.readAsBytes());
   //print('이미지 읽기 : ${DateTime.now().difference(startTime).inMilliseconds} ms');
 
-
   // 1. 이미지 회전
   //print("회전각도 : $rotateDegree");
   img.Image rotatedImage = img.copyRotate(imageBytes!, angle: rotateDegree);
@@ -57,6 +57,5 @@ void processImageWrapper(List<dynamic> args) async {
   String filePath = await saveImage(signedImage);
   //print('이미지 저장 : ${DateTime.now().difference(startTime).inMilliseconds} ms');
 
-  // 미디어 스캔 실행
-  medaiScan(filePath);
+  return filePath;
 }

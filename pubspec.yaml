@@ -47,6 +47,7 @@ dependencies:
   asn1lib: ^1.5.2
   encrypt: ^5.0.3
   android_intent_plus: ^5.0.2
+  media_scanner: ^2.1.0
 
 dev_dependencies:
   flutter_test:

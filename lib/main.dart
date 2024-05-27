@@ -2,16 +2,15 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 
-import 'package:android_intent_plus/android_intent.dart';
 import 'package:external_path/external_path.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
-import 'package:image/image.dart' as img;
 import 'package:image_signer_camera/image_signer.dart';
 import 'package:image_signer_camera/process_image.dart';
 import 'package:image_signer_camera/string_cryptor.dart';
+import 'package:media_scanner/media_scanner.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:sensors_plus/sensors_plus.dart';
@@ -34,11 +33,8 @@ Future<void> main() async {
     stringCryptor('END-VALIDATION'),
   ]);
 
-  cryptedBinary = BinaryProvider(
-    '${results[0]}\n',
-    '${results[1]}\n',
-    '\n${results[2]}'
-  );
+  cryptedBinary =
+      BinaryProvider('${results[0]}\n', '${results[1]}\n', '\n${results[2]}');
 
   // // 테스트용 비암호화 텍스트
   // BinaryProvider noncryptedBinary = BinaryProvider('START-VALIDATION\n', 'Hello, World!\n', '\nEND-VALIDATION');
@@ -56,18 +52,18 @@ Future<void> requestStoragePermission() async {
   }
 }
 
-// 저장소 미디어스캔 실행
-void medaiScan(String path) {
-  if (Platform.isAndroid) {
-    // 미디어 스캔 실행
-    AndroidIntent intent = AndroidIntent(
-      action: 'android.intent.action.MEDIA_SCANNER_SCAN_FILE',
-      data: Uri.file(path).toString(),
-      package: 'com.android.gallery3d',
-    );
-    intent.launch();
-  }
-}
+// // 저장소 미디어스캔 실행
+// void medaiScan(String path) {
+//   if (Platform.isAndroid) {
+//     // 미디어 스캔 실행
+//     AndroidIntent intent = AndroidIntent(
+//       action: 'android.intent.action.MEDIA_SCANNER_SCAN_FILE',
+//       data: Uri.file(path).toString(),
+//       package: 'com.android.gallery3d',
+//     );
+//     intent.launch();
+//   }
+// }
 
 // DCIM 폴더 경로 가져오기 (Scoped Storage)
 Future<String> getPublicDCIMFolderPath() async {
@@ -84,32 +80,32 @@ Future<String> getPublicDCIMFolderPath() async {
   return dcimDirPath;
 }
 
-// Image -> XFile
-Future<XFile> imageToXFile(img.Image image) async {
-  // 이미지를 바이트 배열로 변환
-  List<int> imageBytes = img.encodePng(image);
+// // Image -> XFile
+// Future<XFile> imageToXFile(img.Image image) async {
+//   // 이미지를 바이트 배열로 변환
+//   List<int> imageBytes = img.encodePng(image);
 
-  // 바이트 배열을 파일로 저장
-  Directory tempDir = await getTemporaryDirectory();
-  File tempFile = File('${tempDir.path}/temp.png');
-  await tempFile.writeAsBytes(imageBytes);
+//   // 바이트 배열을 파일로 저장
+//   Directory tempDir = await getTemporaryDirectory();
+//   File tempFile = File('${tempDir.path}/temp.png');
+//   await tempFile.writeAsBytes(imageBytes);
 
-  // 파일의 경로를 사용하여 XFile 객체를 생성
-  XFile xfile = XFile(tempFile.path);
+//   // 파일의 경로를 사용하여 XFile 객체를 생성
+//   XFile xfile = XFile(tempFile.path);
 
-  return xfile;
-}
+//   return xfile;
+// }
 
-// XFile -> Image
-Future<img.Image> xFileToImage(XFile xfile) async {
-  // 파일을 바이트 배열로 읽기
-  Uint8List imageBytes = await File(xfile.path).readAsBytes();
+// // XFile -> Image
+// Future<img.Image> xFileToImage(XFile xfile) async {
+//   // 파일을 바이트 배열로 읽기
+//   Uint8List imageBytes = await File(xfile.path).readAsBytes();
 
-  // 바이트 배열을 이미지로 변환
-  img.Image image = img.decodeImage(imageBytes)!;
+//   // 바이트 배열을 이미지로 변환
+//   img.Image image = img.decodeImage(imageBytes)!;
 
-  return image;
-}
+//   return image;
+// }
 
 // 메인 위젯
 class ImageSignerCamera extends StatelessWidget {
@@ -180,7 +176,7 @@ class _CameraScreenState extends State<CameraScreen> {
     int adjusted90Angle = adjusted90AngleRadian * 180 ~/ pi;
 
     // 이미지 처리 함수 실행
-    await compute(processImageWrapper,
+    String filePath = await compute(processImageWrapper,
         [xFileImage, adjusted90Angle, cryptedBinary, rootIsolateToken]);
 
     await _loadLatestImage();
@@ -188,6 +184,10 @@ class _CameraScreenState extends State<CameraScreen> {
     setState(() {
       _runningTasks--;
     });
+
+    // 미디어 스캔 실행
+    //medaiScan(filePath);
+    MediaScanner.loadMedia(path: filePath);
   }
 
   // 카메라 전환
@@ -198,10 +198,8 @@ class _CameraScreenState extends State<CameraScreen> {
     }
 
     _controller = CameraController(
-      cameras[cameraIndex],
-      ResolutionPreset.ultraHigh,
-      enableAudio: false
-    );
+        cameras[cameraIndex], ResolutionPreset.ultraHigh,
+        enableAudio: false);
 
     await _controller.initialize();
     setState(() {});
@@ -235,15 +233,15 @@ class _CameraScreenState extends State<CameraScreen> {
     _loadLatestImage();
   }
 
-  // 카메라 해제
-  @override
-  void dispose() {
-    // // 가속도계 이벤트 구독 취소
-    // accelerometerSubscription?.cancel();
+  // // 카메라 해제
+  // @override
+  // void dispose() {
+  //   // // 가속도계 이벤트 구독 취소
+  //   // accelerometerSubscription?.cancel();
 
-    _controller.dispose();
-    super.dispose();
-  }
+  //   _controller.dispose();
+  //   super.dispose();
+  // }
 
   @override
   Widget build(BuildContext context) {

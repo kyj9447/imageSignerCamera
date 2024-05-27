@@ -1,18 +1,17 @@
 import 'dart:io';
 
-import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
 import 'package:image_signer_camera/main.dart';
 import 'package:intl/intl.dart';
 
-// compute()용 wrapper
-Future<String> saveImageWrapper(List<dynamic> args) async {
-  // 토큰을 통해 isolate 초기화
-  BackgroundIsolateBinaryMessenger.ensureInitialized(args[0]);
+// // compute()용 wrapper
+// Future<String> saveImageWrapper(List<dynamic> args) async {
+//   // 토큰을 통해 isolate 초기화
+//   BackgroundIsolateBinaryMessenger.ensureInitialized(args[0]);
 
-  img.Image image = args[1];
-  return saveImage(image);
-}
+//   img.Image image = args[1];
+//   return saveImage(image);
+// }
 
 // 이미지 저장
 Future<String> saveImage(img.Image signedImage) async {
