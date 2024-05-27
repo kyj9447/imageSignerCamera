@@ -197,8 +197,7 @@ class _CameraScreenState extends State<CameraScreen> {
       cameraIndex = 0;
     }
 
-    _controller = CameraController(
-        cameras[cameraIndex], ResolutionPreset.max,
+    _controller = CameraController(cameras[cameraIndex], ResolutionPreset.max,
         enableAudio: false);
 
     await _controller.initialize();
