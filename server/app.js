@@ -10,16 +10,15 @@ const app = express();
 
 // HTTPS 서버 옵션
 const options = {
-  cert: fs.readFileSync("SSL/cert1.pem", "utf8"),
-  key: fs.readFileSync("SSL/privkey1.pem", "utf8"),
-  ca: fs.readFileSync("SSL/chain1.pem", "utf8"),
+  cert: fs.readFileSync("SSL/fullchain.pem", "utf8"),
+  key: fs.readFileSync("SSL/privkey.pem", "utf8"),
 };
 
 // HTTPS 서버 생성
 const httpsServer = https.createServer(options, app);
 
 // 서버 리스닝 (446)
-const port = process.env.PORT || 446;
+const port = process.env.PORT || 9446;
 httpsServer.listen(port, () => {
   console.log("Server is running on port " + port);
 });
@@ -63,6 +62,8 @@ app.post("/upload", upload.single("image"), async (req, res) => {
     }
   }
 
+  // console.log(deduplicated);
+
   // 정상적인 deduplicated의 구조
   // [0] = START-VALIDATION
   // [1] = 복호화 대상
@@ -71,6 +72,8 @@ app.post("/upload", upload.single("image"), async (req, res) => {
 
   // 복호화
   const decrypted = decryptArray(deduplicated);
+
+  // console.log(decrypted);
 
   // 복호화된 배열 길이
   const arrayLength = decrypted.length;
@@ -126,12 +129,14 @@ function decryptArray(deduplicated) {
   const privateKey = fs.readFileSync("private_key.pem", "utf8");
 
   // deduplicated의 첫 번째와 마지막 요소를 제외한 모든 요소를 복호화
-  const decrypted = deduplicated.map(
-    (item, index) => {
-      // if (index === 0 || index === deduplicated.length - 1) {
-      //     return item;
-      // } else {
-      // base64 디코딩 후 복호화 시도 (손상된 문자열은 복호화 실패함)
+  const decrypted = deduplicated.map((item, index) => {
+    // if (index === 0 || index === deduplicated.length - 1) {
+    //     return item;
+    // } else {
+    // base64 디코딩 후 복호화 시도 (손상된 문자열은 복호화 실패함)
+    console.log("Item : " + item);
+    // ==로 끝나면 암호화된 문자열임
+    if (item.endsWith("==")) {
       try {
         let buffer = Buffer.from(item, "base64");
         let decrypted = crypto.privateDecrypt(
@@ -141,16 +146,17 @@ function decryptArray(deduplicated) {
           },
           buffer
         );
-        //console.log("Decrypted : "+decrypted.toString());
+        console.log("Decrypted : " + decrypted.toString());
         return decrypted.toString();
       } catch (e) {
         // 복호화 실패 시 그대로 유지
         console.log(e);
         return item;
       }
+    } else {
+      return item;
     }
-    //}
-  );
+  });
 
   return decrypted;
 }
