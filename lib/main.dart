@@ -7,9 +7,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
-import 'package:image_signer_camera/image_signer.dart';
-import 'package:image_signer_camera/process_image.dart';
-import 'package:image_signer_camera/string_cryptor.dart';
+import 'package:imagesignercamera/image_signer.dart';
+import 'package:imagesignercamera/process_image.dart';
+import 'package:imagesignercamera/string_cryptor.dart';
 import 'package:media_scanner/media_scanner.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -24,7 +24,7 @@ BinaryProvider cryptedBinary = BinaryProvider('', '', '');
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   cameras = await availableCameras();
-  await requestStoragePermission();
+  await requestPermissions();
 
   //암호화 텍스트 제공
   List<String> results = await Future.wait([
@@ -44,11 +44,16 @@ Future<void> main() async {
       overlays: []);
 }
 
-// 저장소 권한 요청
-Future<void> requestStoragePermission() async {
-  var status = await Permission.storage.status;
+// 권한 요청
+Future<void> requestPermissions() async {
+  var status = await Permission.camera.status;
   if (!status.isGranted) {
-    status = await Permission.storage.request();
+    status = await Permission.camera.request();
+  }
+
+  var storageStatus = await Permission.storage.status;
+  if (!storageStatus.isGranted) {
+    storageStatus = await Permission.storage.request();
   }
 }
 
@@ -146,6 +151,9 @@ class _CameraScreenState extends State<CameraScreen> {
   // 루트 isolate 토큰
   RootIsolateToken rootIsolateToken = RootIsolateToken.instance!;
 
+  // TextEditingController to manage text input
+  final TextEditingController _textController = TextEditingController();
+
   Future<void> _loadLatestImage() async {
     String? storagePath = await getPublicDCIMFolderPath();
     var directory = Directory('$storagePath/imageSigner');
@@ -211,6 +219,28 @@ class _CameraScreenState extends State<CameraScreen> {
     ));
   }
 
+  // Update cryptedBinary with user input
+  Future<void> _updateCryptedBinary(String input) async {
+    List<String> results = await Future.wait([
+      stringCryptor('START-VALIDATION'),
+      stringCryptor(input),
+      stringCryptor('END-VALIDATION'),
+    ]);
+
+    setState(() {
+      cryptedBinary =
+          BinaryProvider('${results[0]}\n', '${results[1]}\n', '\n${results[2]}');
+    });
+
+    // Show a SnackBar to notify the user
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Text submitted: $input')),
+    );
+
+    // Clear the input field
+    _textController.clear();
+  }
+
   // 카메라 초기화
   @override
   void initState() {
@@ -266,7 +296,24 @@ class _CameraScreenState extends State<CameraScreen> {
             },
           ),
 
-          // 2. 버튼들
+          // 2. 텍스트 입력 필드
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: _textController,
+              decoration: InputDecoration(
+                labelText: 'Enter text to encrypt',
+                suffixIcon: IconButton(
+                  icon: Icon(Icons.send),
+                  onPressed: () {
+                    _updateCryptedBinary(_textController.text);
+                  },
+                ),
+              ),
+            ),
+          ),
+
+          // 3. 버튼들
           StreamBuilder<AccelerometerEvent>(
             stream: accelerometerEventStream(),
             builder: (BuildContext context,

@@ -1,12 +1,9 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:asn1lib/asn1lib.dart';
-
 import 'package:pointycastle/export.dart';
-import 'package:encrypt/encrypt.dart';
 
 Future<String> stringCryptor(String str) async {
-
   // 공개키 문자열 read
   String publicKeyContent =
       await rootBundle.loadString('assets/public_key.pem');
@@ -35,21 +32,14 @@ Future<String> stringCryptor(String str) async {
   var rsaPublicKey =
       RSAPublicKey(modulus.valueAsBigInteger, exponent.valueAsBigInteger);
 
-  // // 공개 키를 사용하여 RSA 엔진 초기화
-  // RSAEngine engine = RSAEngine()..init(true, PublicKeyParameter<RSAPublicKey> (rsaPublicKey));
-
-  // // OAEP 패딩을 적용
-  // OAEPEncoding encoder = OAEPEncoding(engine);
-
-  // // 암호화
-  // Uint8List plainText = utf8.encode(str);
-  // Uint8List cipherText = encoder.process(plainText);
-
-  // return base64Encode(cipherText);
+  // 공개 키를 사용하여 RSA 엔진 초기화
+  RSAEngine engine = RSAEngine();
+  OAEPEncoding encoder = OAEPEncoding(engine);
+  encoder.init(true, PublicKeyParameter<RSAPublicKey>(rsaPublicKey));
 
   // 암호화
-  var encrypter = Encrypter(RSA(publicKey: rsaPublicKey));
-  var encrypted = encrypter.encrypt(str);
+  Uint8List plainText = utf8.encode(str);
+  Uint8List cipherText = encoder.process(plainText);
 
-  return encrypted.base64;
+  return base64Encode(cipherText);
 }

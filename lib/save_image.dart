@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:image/image.dart' as img;
-import 'package:image_signer_camera/main.dart';
+import 'package:imagesignercamera/main.dart';
 import 'package:intl/intl.dart';
 
 // // compute()용 wrapper

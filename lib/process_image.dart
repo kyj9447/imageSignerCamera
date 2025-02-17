@@ -1,8 +1,8 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
-import 'package:image_signer_camera/image_signer.dart';
-import 'package:image_signer_camera/save_image.dart';
+import 'package:imagesignercamera/image_signer.dart';
+import 'package:imagesignercamera/save_image.dart';
 
 //DateTime startTime = DateTime.now();
 

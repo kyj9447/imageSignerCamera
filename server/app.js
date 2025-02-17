@@ -10,8 +10,8 @@ const app = express();
 
 // HTTPS 서버 옵션
 const options = {
-  cert: fs.readFileSync("SSL/fullchain.pem", "utf8"),
-  key: fs.readFileSync("SSL/privkey.pem", "utf8"),
+  cert: fs.readFileSync("SSL/www.kyj9447.kr-crt.pem", "utf8"),
+  key: fs.readFileSync("SSL/www.kyj9447.kr-key.pem", "utf8"),
 };
 
 // HTTPS 서버 생성
@@ -73,7 +73,7 @@ app.post("/upload", upload.single("image"), async (req, res) => {
   // 복호화
   const decrypted = decryptArray(deduplicated);
 
-  // console.log(decrypted);
+  console.log(decrypted);
 
   // 복호화된 배열 길이
   const arrayLength = decrypted.length;
@@ -130,10 +130,6 @@ function decryptArray(deduplicated) {
 
   // deduplicated의 첫 번째와 마지막 요소를 제외한 모든 요소를 복호화
   const decrypted = deduplicated.map((item, index) => {
-    // if (index === 0 || index === deduplicated.length - 1) {
-    //     return item;
-    // } else {
-    // base64 디코딩 후 복호화 시도 (손상된 문자열은 복호화 실패함)
     console.log("Item : " + item);
     // ==로 끝나면 암호화된 문자열임
     if (item.endsWith("==")) {
@@ -142,7 +138,7 @@ function decryptArray(deduplicated) {
         let decrypted = crypto.privateDecrypt(
           {
             key: privateKey,
-            padding: crypto.constants.RSA_PKCS1_PADDING,
+            padding: crypto.constants.RSA_PKCS1_OAEP_PADDING,
           },
           buffer
         );
