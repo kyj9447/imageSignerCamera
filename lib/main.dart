@@ -19,6 +19,7 @@ import 'package:sensors_plus/sensors_plus.dart';
 List<CameraDescription> cameras = [];
 int cameraIndex = 0;
 BinaryProvider cryptedBinary = BinaryProvider('', '', '');
+String text = "Hello, World!";
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -184,13 +185,25 @@ class _CameraScreenState extends State<CameraScreen> {
 
   /// 카메라 전환
   Future<void> _switchCamera() async {
-    cameraIndex = (cameraIndex + 1) % cameras.length;
+    // 0 -> 2 -> 1 -> 3번 카메라 순환 (후면,후면,전면,전면 카메라)
+    cameraIndex =
+        (cameraIndex == 0)
+            ? 2
+            : (cameraIndex == 2)
+            ? 1
+            : (cameraIndex == 1)
+            ? 3
+            : 0;
+
     _controller = CameraController(
       cameras[cameraIndex],
       ResolutionPreset.max,
       enableAudio: false,
     );
     await _controller.initialize();
+
+    if (!mounted) return; // context 유효성 확인
+
     setState(() {});
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -200,8 +213,11 @@ class _CameraScreenState extends State<CameraScreen> {
     );
   }
 
-  /// 사용자 입력 텍스트를 암호화하여 cryptedBinary 업데이트
+  // 사용자 입력 텍스트를 암호화하여 cryptedBinary 업데이트
   Future<void> _updateCryptedBinary(String input) async {
+    // 입력칸 placeholder 변경
+    text = input;
+
     final results = await Future.wait([
       stringCryptor('START-VALIDATION'),
       stringCryptor(input),
@@ -214,6 +230,9 @@ class _CameraScreenState extends State<CameraScreen> {
         '\n${results[2]}',
       );
     });
+
+    if (!mounted) return; // context 유효성 확인
+
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text('Text submitted: $input')));
@@ -247,28 +266,16 @@ class _CameraScreenState extends State<CameraScreen> {
     return Scaffold(
       body: Column(
         children: <Widget>[
-          // 카메라 프리뷰가 남은 공간 모두 사용
-          Expanded(
-            child: FutureBuilder<void>(
-              future: _initializeControllerFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  return Transform.rotate(
-                    angle: pi * 1 / 2, // 90도 회전
-                    child: FittedBox(
-                      fit: BoxFit.cover,
-                      child: SizedBox(
-                        width: _controller.value.previewSize!.height,
-                        height: _controller.value.previewSize!.width,
-                        child: CameraPreview(_controller),
-                      ),
-                    ),
-                  );
-                } else {
-                  return const Center(child: CircularProgressIndicator());
-                }
-              },
-            ),
+          // 카메라 프리뷰
+          FutureBuilder<void>(
+            future: _initializeControllerFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.done) {
+                return CameraPreview(_controller);
+              } else {
+                return const Center(child: CircularProgressIndicator());
+              }
+            },
           ),
           // 하단 패널: 텍스트 입력 필드와 버튼 영역
           Column(
@@ -280,7 +287,7 @@ class _CameraScreenState extends State<CameraScreen> {
                 child: TextField(
                   controller: _textController,
                   decoration: InputDecoration(
-                    labelText: 'Enter text to encrypt',
+                    labelText: 'Current text : $text',
                     suffixIcon: IconButton(
                       icon: const Icon(Icons.send),
                       onPressed:
@@ -289,51 +296,65 @@ class _CameraScreenState extends State<CameraScreen> {
                   ),
                 ),
               ),
-              // 버튼 영역: 영역 크기를 2배로 늘리고 버튼 간격을 균일하게 배치
+              // 버튼 영역
               StreamBuilder<AccelerometerEvent>(
-                stream: accelerometerEvents,
+                stream: accelerometerEventStream(),
                 builder: (context, snapshot) {
                   final adjustedAngle = _getAdjustedAngle(snapshot.data);
                   return Container(
-                    height: 120, // 기존의 2배 크기로 영역 높이를 지정 (원하는 값으로 조정 가능)
+                    height: 120, // 원하는 값으로 조정 가능
                     color: Colors.black,
                     padding: const EdgeInsets.all(8.0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: <Widget>[
                         // 갤러리 버튼
-                        Transform.rotate(
-                          angle: adjustedAngle,
-                          child: FloatingActionButton(
-                            onPressed: () {},
-                            child:
-                                _runningTasks > 0
-                                    ? Stack(
-                                      alignment: Alignment.center,
-                                      children: <Widget>[
-                                        const CircularProgressIndicator(),
-                                        if (_runningTasks > 1)
-                                          Text('$_runningTasks'),
-                                      ],
-                                    )
-                                    : _latestImage != null
-                                    ? Image.file(_latestImage!)
-                                    : const Icon(Icons.browse_gallery_rounded),
-                          ),
+                        AnimatedRotation(
+                          turns: adjustedAngle / (2 * pi),
+                          duration: const Duration(milliseconds: 100),
+                          child:
+                              _runningTasks > 0
+                                  ? Stack(
+                                    alignment: Alignment.center,
+                                    children: <Widget>[
+                                      const CircularProgressIndicator(),
+                                      if (_runningTasks > 1)
+                                        Text('$_runningTasks'),
+                                    ],
+                                  )
+                                  : _latestImage != null
+                                  ? ClipRRect(
+                                    // ✅ 이미지의 오버플로우를 숨기기 위해 클리핑
+                                    borderRadius: BorderRadius.circular(
+                                      14,
+                                    ), // FAB의 기본 반지름 적용
+                                    child: SizedBox(
+                                      width: 56, // FAB 크기와 동일하게 설정
+                                      height: 56,
+                                      child: Image.file(
+                                        _latestImage!,
+                                        fit: BoxFit.cover, // 이미지가 잘리지 않도록 크기 맞춤
+                                      ),
+                                    ),
+                                  )
+                                  : const Icon(Icons.browse_gallery_rounded),
                         ),
+
                         // 사진 촬영 버튼
-                        Transform.rotate(
-                          angle: adjustedAngle,
-                          child: FloatingActionButton(
-                            onPressed: () => takeAndSignPicture(adjustedAngle),
+                        FloatingActionButton(
+                          onPressed: () => takeAndSignPicture(adjustedAngle),
+                          child: AnimatedRotation(
+                            turns: adjustedAngle / (2 * pi),
+                            duration: const Duration(milliseconds: 100),
                             child: const Icon(Icons.camera),
                           ),
                         ),
                         // 카메라 전환 버튼
-                        Transform.rotate(
-                          angle: adjustedAngle,
-                          child: FloatingActionButton(
-                            onPressed: _switchCamera,
+                        FloatingActionButton(
+                          onPressed: _switchCamera,
+                          child: AnimatedRotation(
+                            turns: adjustedAngle / (2 * pi),
+                            duration: const Duration(milliseconds: 100),
                             child: const Icon(Icons.switch_camera),
                           ),
                         ),
