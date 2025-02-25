@@ -56,3 +56,4 @@ analysis_options.yaml
 pubspec.lock
 .vscode/*
 server/SSL
+server/imageSignerCameraServer.bat

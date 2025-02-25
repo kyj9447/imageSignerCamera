@@ -302,7 +302,7 @@ class _CameraScreenState extends State<CameraScreen> {
                 builder: (context, snapshot) {
                   final adjustedAngle = _getAdjustedAngle(snapshot.data);
                   return Container(
-                    height: 120, // 원하는 값으로 조정 가능
+                    height: 200, // 원하는 값으로 조정 가능
                     color: Colors.black,
                     padding: const EdgeInsets.all(8.0),
                     child: Row(
@@ -314,17 +314,19 @@ class _CameraScreenState extends State<CameraScreen> {
                           duration: const Duration(milliseconds: 100),
                           child:
                               _runningTasks > 0
-                                  ? Stack(
-                                    alignment: Alignment.center,
-                                    children: <Widget>[
-                                      const CircularProgressIndicator(),
-                                      if (_runningTasks > 1)
-                                        Text('$_runningTasks'),
-                                    ],
+                                  ? FloatingActionButton(
+                                    onPressed: () => {},
+                                    child: Stack(
+                                      alignment: Alignment.center,
+                                      children: <Widget>[
+                                        const CircularProgressIndicator(),
+                                        if (_runningTasks > 1)
+                                          Text('$_runningTasks'),
+                                      ],
+                                    ),
                                   )
                                   : _latestImage != null
                                   ? ClipRRect(
-                                    // ✅ 이미지의 오버플로우를 숨기기 위해 클리핑
                                     borderRadius: BorderRadius.circular(
                                       14,
                                     ), // FAB의 기본 반지름 적용
