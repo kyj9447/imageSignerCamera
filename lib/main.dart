@@ -283,7 +283,7 @@ Widget build(BuildContext context) {
           alignment: Alignment.bottomCenter,
           child: Container(
             // 투명도 적용 (예: 50% 불투명)
-            color: Colors.black.withOpacity(0.5),
+            color: Colors.black.withValues(alpha: 0.5),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
