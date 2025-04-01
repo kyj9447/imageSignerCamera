@@ -10,8 +10,8 @@ const app = express();
 
 // HTTPS 서버 옵션
 const options = {
-  cert: fs.readFileSync("SSL/www.kyj9447.kr-crt.pem", "utf8"),
-  key: fs.readFileSync("SSL/www.kyj9447.kr-key.pem", "utf8"),
+  cert: fs.readFileSync("SSL/cert.pem", "utf8"),
+  key: fs.readFileSync("SSL/privkey.pem", "utf8"),
 };
 
 // HTTPS 서버 생성

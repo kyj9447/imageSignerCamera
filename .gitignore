@@ -57,3 +57,4 @@ pubspec.lock
 .vscode/*
 server/SSL
 server/imageSignerCameraServer.bat
+server/bin/imagesignerserver
