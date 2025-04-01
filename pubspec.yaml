@@ -47,6 +47,7 @@ dependencies:
   encrypt: any
   android_intent_plus: any
   media_scanner: any
+  camera_android: ^0.10.10+1
 
 dev_dependencies:
   flutter_test:

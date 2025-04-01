@@ -129,7 +129,7 @@ class _CameraScreenState extends State<CameraScreen> {
 
     // 컨트롤러 초기화
     await _controller.initialize();
-
+    await _controller.setFocusMode(FocusMode.auto);
     setState(() {});
   }
 
@@ -262,60 +262,64 @@ class _CameraScreenState extends State<CameraScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
-        children: <Widget>[
-          // 카메라 프리뷰
-          FutureBuilder<void>(
-            future: _initializeControllerFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.done) {
-                return CameraPreview(_controller);
-              } else {
-                return const Center(child: CircularProgressIndicator());
-              }
-            },
-          ),
-          // 하단 패널: 텍스트 입력 필드와 버튼 영역
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // 텍스트 입력 필드
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: TextField(
-                  controller: _textController,
-                  decoration: InputDecoration(
-                    labelText: 'Current text : $text',
-                    suffixIcon: IconButton(
-                      icon: const Icon(Icons.send),
-                      onPressed:
-                          () => _updateCryptedBinary(_textController.text),
+Widget build(BuildContext context) {
+  return Scaffold(
+    backgroundColor: Colors.black,
+    body: Stack(
+      children: [
+        // 배경: 카메라 프리뷰
+        FutureBuilder<void>(
+          future: _initializeControllerFuture,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.done) {
+              return CameraPreview(_controller);
+            } else {
+              return const Center(child: CircularProgressIndicator());
+            }
+          },
+        ),
+        // 오버레이: 텍스트 필드와 버튼 영역
+        Align(
+          alignment: Alignment.bottomCenter,
+          child: Container(
+            // 투명도 적용 (예: 50% 불투명)
+            color: Colors.black.withOpacity(0.5),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 텍스트 입력 필드
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: TextField(
+                    controller: _textController,
+                    decoration: InputDecoration(
+                      labelText: 'Current text: $text',
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.send),
+                        onPressed: () =>
+                            _updateCryptedBinary(_textController.text),
+                      ),
                     ),
                   ),
                 ),
-              ),
-              // 버튼 영역
-              StreamBuilder<AccelerometerEvent>(
-                stream: accelerometerEventStream(),
-                builder: (context, snapshot) {
-                  final adjustedAngle = _getAdjustedAngle(snapshot.data);
-                  return Container(
-                    height: 200, // 원하는 값으로 조정 가능
-                    color: Colors.black,
-                    padding: const EdgeInsets.all(8.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: <Widget>[
-                        // 갤러리 버튼
-                        AnimatedRotation(
-                          turns: adjustedAngle / (2 * pi),
-                          duration: const Duration(milliseconds: 100),
-                          child:
-                              _runningTasks > 0
-                                  ? FloatingActionButton(
-                                    onPressed: () => {},
+                // 버튼 영역
+                StreamBuilder<AccelerometerEvent>(
+                  stream: accelerometerEventStream(),
+                  builder: (context, snapshot) {
+                    final adjustedAngle = _getAdjustedAngle(snapshot.data);
+                    return Container(
+                      height: 100, // 버튼 영역 높이 설정
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: <Widget>[
+                          // 갤러리 버튼
+                          AnimatedRotation(
+                            turns: adjustedAngle / (2 * pi),
+                            duration: const Duration(milliseconds: 100),
+                            child: _runningTasks > 0
+                                ? FloatingActionButton(
+                                    onPressed: () {},
                                     child: Stack(
                                       alignment: Alignment.center,
                                       children: <Widget>[
@@ -325,50 +329,51 @@ class _CameraScreenState extends State<CameraScreen> {
                                       ],
                                     ),
                                   )
-                                  : _latestImage != null
-                                  ? ClipRRect(
-                                    borderRadius: BorderRadius.circular(
-                                      14,
-                                    ), // FAB의 기본 반지름 적용
-                                    child: SizedBox(
-                                      width: 56, // FAB 크기와 동일하게 설정
-                                      height: 56,
-                                      child: Image.file(
-                                        _latestImage!,
-                                        fit: BoxFit.cover, // 이미지가 잘리지 않도록 크기 맞춤
-                                      ),
-                                    ),
-                                  )
-                                  : const Icon(Icons.browse_gallery_rounded),
-                        ),
-
-                        // 사진 촬영 버튼
-                        FloatingActionButton(
-                          onPressed: () => takeAndSignPicture(adjustedAngle),
-                          child: AnimatedRotation(
-                            turns: adjustedAngle / (2 * pi),
-                            duration: const Duration(milliseconds: 100),
-                            child: const Icon(Icons.camera),
+                                : _latestImage != null
+                                    ? ClipRRect(
+                                        borderRadius: BorderRadius.circular(14),
+                                        child: SizedBox(
+                                          width: 56,
+                                          height: 56,
+                                          child: Image.file(
+                                            _latestImage!,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      )
+                                    : const Icon(
+                                        Icons.browse_gallery_rounded),
                           ),
-                        ),
-                        // 카메라 전환 버튼
-                        FloatingActionButton(
-                          onPressed: _switchCamera,
-                          child: AnimatedRotation(
-                            turns: adjustedAngle / (2 * pi),
-                            duration: const Duration(milliseconds: 100),
-                            child: const Icon(Icons.switch_camera),
+                          // 사진 촬영 버튼
+                          FloatingActionButton(
+                            onPressed: () => takeAndSignPicture(adjustedAngle),
+                            child: AnimatedRotation(
+                              turns: adjustedAngle / (2 * pi),
+                              duration: const Duration(milliseconds: 100),
+                              child: const Icon(Icons.camera),
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ],
+                          // 카메라 전환 버튼
+                          FloatingActionButton(
+                            onPressed: _switchCamera,
+                            child: AnimatedRotation(
+                              turns: adjustedAngle / (2 * pi),
+                              duration: const Duration(milliseconds: 100),
+                              child: const Icon(Icons.switch_camera),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
+
 }
