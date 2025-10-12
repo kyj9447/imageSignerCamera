@@ -30,6 +30,9 @@ app.get("/", (req, res) => {
 // 파일 업로드를 위한 multer 설정
 const storage = multer.diskStorage({
   destination: (req, file, callBack) => {
+    
+    fs.mkdirSync("uploads", { recursive: true });
+
     callBack(null, "uploads/");
   },
   filename: (req, file, callBack) => {
@@ -159,7 +162,7 @@ function decryptArray(deduplicated) {
 
 // APK 다운로드
 app.get("/apk", async (req, res) => {
-  const filePath = "../build/app/outputs/flutter-apk/app-release.apk";
+  const filePath = "app-release.apk";
   if (fs.existsSync(filePath)) {
     res.download(filePath, "imageSignerCamera.apk");
   } else {

@@ -58,3 +58,5 @@ pubspec.lock
 server/SSL
 server/imageSignerCameraServer.bat
 server/bin/imagesignerserver
+server/app-release.apk
+server/imageSignerServer
