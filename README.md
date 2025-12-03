@@ -1,4 +1,7 @@
-(문자열 주입 / 추출 원리 참고 : https://github.com/kyj9447/imageSignerAndValidator)
+~~(문자열 주입 / 추출 원리 참고 : https://github.com/kyj9447/imageSignerAndValidator)~~
+
+(문자열 주입 / 추출 원리 참고 : [Pixseal](https://github.com/kyj9447/Pixseal))
+
 ## 1.image_signer_camera
 (/lib/main.dart)
 
@@ -66,4 +69,5 @@ END-VALIDATION (끝지점 문자열 - 복호화됨)
 (=이미지를 잘라낸 경우 or 이미지의 일부 픽셀을 조금이라도 수정한 경우)
 
 <br><img src="https://github.com/kyj9447/imageSignerCamera/assets/122734245/039f6e18-1e58-4e71-84c8-8eec5461ea77" width=800px><br>
+
 
